@@ -1,10 +1,12 @@
 package rpc
 
 import (
+	"bytes"
 	"context"
 	"eth2-exporter/types"
 	"eth2-exporter/utils"
 	"fmt"
+	"github.com/ethereum/go-ethereum/rlp"
 	"sync"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/prysmaticlabs/go-bitfield"
 	"google.golang.org/grpc"
 
+	gtypes "github.com/ethereum/go-ethereum/core/types"
 	ptypes "github.com/gogo/protobuf/types"
 	eth2types "github.com/prysmaticlabs/eth2-types"
 )
@@ -150,9 +153,17 @@ func (pc *PrysmClient) GetValidatorQueue() (*types.ValidatorQueue, error) {
 		ChurnLimit:                 validators.ChurnLimit,
 		ActivationPublicKeys:       validators.ActivationPublicKeys,
 		ExitPublicKeys:             validators.ExitPublicKeys,
-		ActivationValidatorIndices: validators.ActivationValidatorIndices,
-		ExitValidatorIndices:       validators.ExitValidatorIndices,
+		ActivationValidatorIndices: mapValIndices(validators.ActivationValidatorIndices),
+		ExitValidatorIndices:       mapValIndices(validators.ExitValidatorIndices),
 	}, nil
+}
+
+func mapValIndices(vals []eth2types.ValidatorIndex) []uint64 {
+	out := make([]uint64, len(vals))
+	for i, v := range vals {
+		out[i] = uint64(v)
+	}
+	return out
 }
 
 // GetAttestationPool will get the attestation pool from a Prysm client
@@ -245,11 +256,11 @@ func (pc *PrysmClient) GetEpochAssignments(epoch uint64) (*types.EpochAssignment
 	// Attestation assignments are cached by the slot & committee key
 	for _, assignment := range validatorAssignmentes {
 		for _, slot := range assignment.ProposerSlots {
-			assignments.ProposerAssignments[uint64(slot)] = assignment.ValidatorIndex
+			assignments.ProposerAssignments[uint64(slot)] = uint64(assignment.ValidatorIndex)
 		}
 
 		for memberIndex, validatorIndex := range assignment.BeaconCommittees {
-			assignments.AttestorAssignments[utils.FormatAttestorAssignmentKey(uint64(assignment.AttesterSlot), uint64(assignment.CommitteeIndex), uint64(memberIndex))] = validatorIndex
+			assignments.AttestorAssignments[utils.FormatAttestorAssignmentKey(uint64(assignment.AttesterSlot), uint64(assignment.CommitteeIndex), uint64(memberIndex))] = uint64(validatorIndex)
 		}
 	}
 
@@ -339,6 +350,19 @@ func (pc *PrysmClient) GetEpochData(epoch uint64) (*types.EpochData, error) {
 				Attestations:      make([]*types.Attestation, 0),
 				Deposits:          make([]*types.Deposit, 0),
 				VoluntaryExits:    make([]*types.VoluntaryExit, 0),
+				ExecutionPayload: &types.ExecutionPayload{
+					BlockHash:    []byte{},
+					ParentHash:   []byte{},
+					Coinbase:     []byte{},
+					StateRoot:    []byte{},
+					Number:       0,
+					GasLimit:     0,
+					GasUsed:      0,
+					Timestamp:    0,
+					ReceiptRoot:  []byte{},
+					LogsBloom:    []byte{},
+					Transactions: make([]*types.Transaction, 0),
+				},
 			}
 
 			if utils.SlotToTime(slot).After(time.Now().Add(time.Second * -60)) {
@@ -373,14 +397,14 @@ func (pc *PrysmClient) GetEpochData(epoch uint64) (*types.EpochData, error) {
 
 		for _, validator := range validatorResponse.ValidatorList {
 
-			balance, exists := validatorBalances[validator.Index]
+			balance, exists := validatorBalances[uint64(validator.Index)]
 			if !exists {
 				logger.WithField("pubkey", fmt.Sprintf("%x", validator.Validator.PublicKey)).WithField("epoch", epoch).Errorf("error retrieving validator balance")
 				continue
 			}
 
 			val := &types.Validator{
-				Index:                      validator.Index,
+				Index:                      uint64(validator.Index),
 				PublicKey:                  validator.Validator.PublicKey,
 				WithdrawalCredentials:      validator.Validator.WithdrawalCredentials,
 				Balance:                    balance,
@@ -392,9 +416,9 @@ func (pc *PrysmClient) GetEpochData(epoch uint64) (*types.EpochData, error) {
 				WithdrawableEpoch:          uint64(validator.Validator.WithdrawableEpoch),
 			}
 
-			val.Balance1d = validatorBalances1d[validator.Index]
-			val.Balance7d = validatorBalances7d[validator.Index]
-			val.Balance31d = validatorBalances31d[validator.Index]
+			val.Balance1d = validatorBalances1d[uint64(validator.Index)]
+			val.Balance7d = validatorBalances7d[uint64(validator.Index)]
+			val.Balance31d = validatorBalances31d[uint64(validator.Index)]
 
 			data.Validators = append(data.Validators, val)
 
@@ -441,7 +465,7 @@ func (pc *PrysmClient) getBalancesForEpoch(epoch int64) (map[uint64]uint64, erro
 		}
 
 		for _, balance := range validatorBalancesResponse.Balances {
-			validatorBalances[balance.Index] = balance.Balance
+			validatorBalances[uint64(balance.Index)] = balance.Balance
 		}
 
 		if validatorBalancesResponse.NextPageToken == "" {
@@ -521,6 +545,7 @@ func (pc *PrysmClient) GetBlockStatusByEpoch(epoch uint64) ([]*types.CanonBlock,
 }
 
 func (pc *PrysmClient) parseRpcBlock(block *ethpb.BeaconBlockContainer) (*types.Block, error) {
+	exec := block.Block.Block.Body.ExecutionPayload
 	b := &types.Block{
 		Status:       1,
 		Canonical:    block.Canonical,
@@ -541,12 +566,41 @@ func (pc *PrysmClient) parseRpcBlock(block *ethpb.BeaconBlockContainer) (*types.
 		Attestations:      make([]*types.Attestation, len(block.Block.Block.Body.Attestations)),
 		Deposits:          make([]*types.Deposit, len(block.Block.Block.Body.Deposits)),
 		VoluntaryExits:    make([]*types.VoluntaryExit, len(block.Block.Block.Body.VoluntaryExits)),
-		Proposer:          block.Block.Block.ProposerIndex,
+		Proposer:          uint64(block.Block.Block.ProposerIndex),
+		ExecutionPayload: &types.ExecutionPayload{
+			BlockHash:    exec.BlockHash,
+			ParentHash:   exec.ParentHash,
+			Coinbase:     exec.Coinbase,
+			StateRoot:    exec.StateRoot,
+			Number:       exec.Number,
+			GasLimit:     exec.GasLimit,
+			GasUsed:      exec.GasUsed,
+			Timestamp:    exec.Timestamp,
+			ReceiptRoot:  exec.ReceiptRoot,
+			LogsBloom:    exec.LogsBloom,
+			Transactions: make([]*types.Transaction, len(exec.Transactions)),
+		},
+	}
+	for i, rawTx := range exec.Transactions {
+		tx := &types.Transaction{Raw: rawTx}
+		var decTx gtypes.Transaction
+		if err := decTx.DecodeRLP(rlp.NewStream(bytes.NewReader(rawTx), uint64(len(rawTx)))); err != nil {
+			h := decTx.Hash()
+			tx.TxHash = h[:]
+			tx.AccountNonce = decTx.Nonce()
+			// big endian
+			tx.Price = decTx.GasPrice().Bytes()
+			tx.GasLimit = decTx.Gas()
+			tx.Recipient = decTx.To().Bytes()
+			tx.Amount = decTx.Value().Bytes()
+			tx.Payload = decTx.Data()
+		}
+		b.ExecutionPayload.Transactions[i] = tx
 	}
 
 	for i, proposerSlashing := range block.Block.Block.Body.ProposerSlashings {
 		b.ProposerSlashings[i] = &types.ProposerSlashing{
-			ProposerIndex: proposerSlashing.Header_1.Header.ProposerIndex,
+			ProposerIndex: uint64(proposerSlashing.Header_1.Header.ProposerIndex),
 			Header1: &types.Block{
 				Slot:       uint64(proposerSlashing.Header_1.Header.Slot),
 				ParentRoot: proposerSlashing.Header_1.Header.ParentRoot,
@@ -655,7 +709,7 @@ func (pc *PrysmClient) parseRpcBlock(block *ethpb.BeaconBlockContainer) (*types.
 	for i, voluntaryExit := range block.Block.Block.Body.VoluntaryExits {
 		b.VoluntaryExits[i] = &types.VoluntaryExit{
 			Epoch:          uint64(voluntaryExit.Exit.Epoch),
-			ValidatorIndex: voluntaryExit.Exit.ValidatorIndex,
+			ValidatorIndex: uint64(voluntaryExit.Exit.ValidatorIndex),
 			Signature:      voluntaryExit.Signature,
 		}
 	}

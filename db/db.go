@@ -1176,13 +1176,22 @@ func saveBlocks(blocks map[uint64]map[string]*types.Block, tx *sql.Tx) error {
 	}()
 
 	stmtBlock, err := tx.Prepare(`
-		INSERT INTO blocks (epoch, slot, blockroot, parentroot, stateroot, signature, randaoreveal, graffiti, eth1data_depositroot, eth1data_depositcount, eth1data_blockhash, proposerslashingscount, attesterslashingscount, attestationscount, depositscount, voluntaryexitscount, proposer, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+		INSERT INTO blocks (epoch, slot, blockroot, parentroot, stateroot, signature, randaoreveal, graffiti, eth1data_depositroot, eth1data_depositcount, eth1data_blockhash, proposerslashingscount, attesterslashingscount, attestationscount, depositscount, voluntaryexitscount, proposer, status, exec_blockhash, exec_parenthash, exec_coinbase, exec_stateroot, exec_number, exec_gaslimit, exec_gasused, exec_timestamp, exec_receiptroot, exec_logsbloom, exec_transactioncount)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
 		ON CONFLICT (slot, blockroot) DO NOTHING`)
 	if err != nil {
 		return err
 	}
 	defer stmtBlock.Close()
+
+	stmtTransaction, err := tx.Prepare(`
+		INSERT INTO blocks_transactions (block_slot, block_index, block_root, raw, txhash, nonce, gasprice, gaslimit, recipient, amount, payload)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		ON CONFLICT (block_slot, block_index) DO NOTHING`)
+	if err != nil {
+		return err
+	}
+	defer stmtTransaction.Close()
 
 	stmtProposerSlashing, err := tx.Prepare(`
 		INSERT INTO blocks_proposerslashings (block_slot, block_index, block_root, proposerindex, header1_slot, header1_parentroot, header1_stateroot, header1_bodyroot, header1_signature, header2_slot, header2_parentroot, header2_stateroot, header2_bodyroot, header2_signature)
@@ -1295,11 +1304,32 @@ func saveBlocks(blocks map[uint64]map[string]*types.Block, tx *sql.Tx) error {
 				len(b.Deposits),
 				len(b.VoluntaryExits),
 				b.Proposer,
-				strconv.FormatUint(b.Status, 10))
+				strconv.FormatUint(b.Status, 10),
+				b.ExecutionPayload.BlockHash,
+				b.ExecutionPayload.ParentHash,
+				b.ExecutionPayload.Coinbase,
+				b.ExecutionPayload.StateRoot,
+				b.ExecutionPayload.Number,
+				b.ExecutionPayload.GasLimit,
+				b.ExecutionPayload.Timestamp,
+				b.ExecutionPayload.ReceiptRoot,
+				b.ExecutionPayload.LogsBloom,
+				len(b.ExecutionPayload.Transactions),
+			)
 			if err != nil {
 				return fmt.Errorf("error executing stmtBlocks for block %v: %v", b.Slot, err)
 			}
 
+			logger.Tracef("done, took %v", time.Since(n))
+			n = time.Now()
+			logger.Tracef("writing transactions data")
+			for i, tx := range b.ExecutionPayload.Transactions {
+				_, err := stmtTransaction.Exec(b.Slot, i, b.BlockRoot,
+					tx.Raw, tx.TxHash, tx.AccountNonce, tx.Price, tx.GasLimit, tx.Recipient, tx.Amount, tx.Payload)
+				if err != nil {
+					return fmt.Errorf("error executing stmtTransaction for block %v: %v", b.Slot, err)
+				}
+			}
 			logger.Tracef("done, took %v", time.Since(n))
 			n = time.Now()
 			logger.Tracef("writing proposer slashings data")

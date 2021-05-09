@@ -258,9 +258,38 @@ create table blocks
     voluntaryexitscount    int   not null,
     proposer               int   not null,
     status                 text  not null, /* Can be 0 = scheduled, 1 proposed, 2 missed, 3 orphaned */
+    exec_blockhash         bytea not null,
+    exec_parenthash        bytea not null,
+    exec_coinbase          bytea not null,
+    exec_stateroot         bytea not null,
+    exec_number            int   not null,
+    exec_gaslimit          int   not null,
+    exec_gasused           int   not null,
+    exec_timestamp         int   not null,
+    exec_receiptroot       bytea not null,
+    exec_logsbloom         bytea not null,
+    exec_transactioncount  int   not null,
     primary key (slot, blockroot)
 );
 create index idx_blocks_proposer on blocks (proposer);
+
+
+drop table if exists blocks_transactions;
+create table blocks_transactions
+(
+    block_slot         int    not null,
+    block_index        int    not null,
+    block_root         bytea  not null default '',
+    raw                bytea  not null,
+    txhash             bytea  not null,
+    nonce              int    not null,
+    gasprice           bytea  not null,
+    gaslimit           int    not null,
+    recipient          bytea  not null,
+    amount             bytea  not null,
+    payload            bytea  not null,
+    primary key (block_slot, block_index)
+);
 
 drop table if exists blocks_proposerslashings;
 create table blocks_proposerslashings

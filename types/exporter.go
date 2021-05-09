@@ -91,6 +91,35 @@ type Block struct {
 	Deposits          []*Deposit
 	VoluntaryExits    []*VoluntaryExit
 	Canonical         bool
+	ExecutionPayload  *ExecutionPayload
+}
+
+type Transaction struct {
+	Raw []byte
+	// Note: below values may be nil/0 if Raw fails to decode into a valid transaction
+	TxHash       []byte
+	AccountNonce uint64
+	// big endian
+	Price     []byte
+	GasLimit  uint64
+	Recipient []byte
+	// big endian
+	Amount  []byte
+	Payload []byte
+}
+
+type ExecutionPayload struct {
+	BlockHash    []byte
+	ParentHash   []byte
+	Coinbase     []byte
+	StateRoot    []byte
+	Number       uint64
+	GasLimit     uint64
+	GasUsed      uint64
+	Timestamp    uint64
+	ReceiptRoot  []byte
+	LogsBloom    []byte
+	Transactions []*Transaction
 }
 
 // Eth1Data is a struct to hold the ETH1 data
