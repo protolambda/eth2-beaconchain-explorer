@@ -39,7 +39,7 @@ require (
 	github.com/protolambda/zrnt v0.12.4
 	github.com/protolambda/ztyp v0.1.0
 	github.com/prysmaticlabs/eth2-types v0.0.0-20210127031309-22cbe426eba6
-	github.com/prysmaticlabs/ethereumapis v0.0.0-20210218172602-3f05f78bea9d
+	github.com/prysmaticlabs/ethereumapis v0.0.0-20210507194505-00dd2186f7eb
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210202205921-7fcea7c45dc8
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200612203617-6d5c9aa213ae
 	github.com/prysmaticlabs/prysm v1.0.0-alpha.25.0.20200917185001-3db678499074
@@ -66,4 +66,4 @@ require (
 
 replace github.com/ethereum/go-ethereum => github.com/prysmaticlabs/bazel-go-ethereum v0.0.0-20200626171358-a933315235ec
 
-replace github.com/prysmaticlabs/ethereumapis v0.0.0-20210218172602-3f05f78bea9d => ../ethereumapis
+//replace github.com/prysmaticlabs/ethereumapis v0.0.0-20210507194505-00dd2186f7eb => ../ethereumapis
