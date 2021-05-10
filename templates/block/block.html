@@ -129,6 +129,13 @@
                        aria-controls="attestations" aria-selected="false">Attestations <span
                                 class="badge bg-secondary text-white">{{.AttestationsCount}}</span></a>
                 </li>
+                {{if gt .TransactionsCount 0}}
+                <li class="nav-item">
+                    <a class="nav-link" id="transactions-tab" data-toggle="tab" href="#transactions" role="tab"
+                       aria-controls="transactions" aria-selected="false">Transactions <span
+                            class="badge bg-secondary text-white">{{.TransactionsCount}}</span></a>
+                </li>
+                {{end}}
                 {{if gt .DepositsCount 0}}
                     <li class="nav-item">
                         <a class="nav-link" id="deposits-tab" data-toggle="tab" href="#deposits" role="tab"
