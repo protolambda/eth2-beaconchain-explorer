@@ -473,10 +473,27 @@ type BlockPageData struct {
 	AttestationsCount      uint64 `db:"attestationscount"`
 	DepositsCount          uint64 `db:"depositscount"`
 	VoluntaryExitscount    uint64 `db:"voluntaryexitscount"`
-	SlashingsCount         uint64
-	VotesCount             uint64
-	VotingValidatorsCount  uint64
-	Mainnet                bool
+
+	ExecBlockHash  []byte `db:"exec_blockhash"`
+	ExecParentHash []byte `db:"exec_parenthash"`
+	ExecCoinbase   []byte `db:"exec_coinbase"`
+	ExecStateRoot  []byte `db:"exec_stateroot"`
+	ExecNumber     uint64 `db:"exec_number"`
+	ExecGasLimit   uint64 `db:"exec_gaslimit"`
+	ExecGasUsed    uint64 `db:"exec_gasused"`
+
+	ExecTimestamp         uint64 `db:"exec_timestamp"`
+	ExecTime              time.Time
+	ExecReceiptRoot       []byte `db:"exec_receiptroot"`
+	ExecLogsBloom         []byte `db:"exec_logsbloom"`
+	ExecTransactionsCount uint64 `db:"exec_transactioncount"`
+
+	Transactions []*BlockPageTransaction
+
+	SlashingsCount        uint64
+	VotesCount            uint64
+	VotingValidatorsCount uint64
+	Mainnet               bool
 
 	Attestations      []*BlockPageAttestation // Attestations included in this block
 	VoluntaryExits    []*BlockPageVoluntaryExits
@@ -509,6 +526,24 @@ type BlockVote struct {
 type BlockPageMinMaxSlot struct {
 	MinSlot uint64
 	MaxSlot uint64
+}
+
+// BlockPageTransaction is a struct to hold execution transactions on the block page
+type BlockPageTransaction struct {
+	BlockSlot    uint64 `db:"block_slot"`
+	BlockIndex   uint64 `db:"block_index"`
+	TxHash       []byte `db:"txhash"`
+	AccountNonce uint64 `db:"nonce"`
+	// big endian
+	Price       []byte `db:"gasprice"`
+	PricePretty string // TODO
+	GasLimit    uint64 `db:"gaslimit"`
+	Sender      []byte `db:"sender"`
+	Recipient   []byte `db:"recipient"`
+	// big endian
+	Amount       []byte `db:"amount"`
+	AmountPretty string // TODO
+	Payload      []byte `db:"payload"`
 }
 
 // BlockPageAttestation is a struct to hold attestations on the block page

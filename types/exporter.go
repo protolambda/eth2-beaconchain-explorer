@@ -102,6 +102,7 @@ type Transaction struct {
 	// big endian
 	Price     []byte
 	GasLimit  uint64
+	Sender    []byte
 	Recipient []byte
 	// big endian
 	Amount  []byte

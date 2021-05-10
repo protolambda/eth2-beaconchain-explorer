@@ -7,6 +7,7 @@ import (
 	"eth2-exporter/utils"
 	"fmt"
 	"github.com/ethereum/go-ethereum/rlp"
+	"math/big"
 	"sync"
 	"time"
 
@@ -28,10 +29,11 @@ type PrysmClient struct {
 	assignmentsCache    *lru.Cache
 	assignmentsCacheMux *sync.Mutex
 	newBlockChan        chan *types.Block
+	signer              gtypes.EIP155Signer
 }
 
 // NewPrysmClient is used for a new Prysm client connection
-func NewPrysmClient(endpoint string) (*PrysmClient, error) {
+func NewPrysmClient(endpoint string, chainId int64) (*PrysmClient, error) {
 	dialOpts := []grpc.DialOption{
 		grpc.WithInsecure(),
 		// Maximum receive value 128 MB
@@ -53,6 +55,7 @@ func NewPrysmClient(endpoint string) (*PrysmClient, error) {
 		conn:                conn,
 		assignmentsCacheMux: &sync.Mutex{},
 		newBlockChan:        make(chan *types.Block, 1000),
+		signer:              gtypes.NewEIP155Signer(big.NewInt(chainId)),
 	}
 	client.assignmentsCache, _ = lru.New(10)
 
@@ -584,6 +587,7 @@ func (pc *PrysmClient) parseRpcBlock(block *ethpb.BeaconBlockContainer) (*types.
 	for i, rawTx := range exec.Transactions {
 		tx := &types.Transaction{Raw: rawTx}
 		var decTx gtypes.Transaction
+
 		if err := decTx.DecodeRLP(rlp.NewStream(bytes.NewReader(rawTx), uint64(len(rawTx)))); err != nil {
 			h := decTx.Hash()
 			tx.TxHash = h[:]
@@ -591,6 +595,12 @@ func (pc *PrysmClient) parseRpcBlock(block *ethpb.BeaconBlockContainer) (*types.
 			// big endian
 			tx.Price = decTx.GasPrice().Bytes()
 			tx.GasLimit = decTx.Gas()
+			msg, err := decTx.AsMessage(pc.signer)
+			if err != nil {
+				tx.Sender = []byte{}
+			} else {
+				tx.Sender = msg.From().Bytes()
+			}
 			tx.Recipient = decTx.To().Bytes()
 			tx.Amount = decTx.Value().Bytes()
 			tx.Payload = decTx.Data()

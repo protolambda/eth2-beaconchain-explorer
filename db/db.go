@@ -1185,8 +1185,8 @@ func saveBlocks(blocks map[uint64]map[string]*types.Block, tx *sql.Tx) error {
 	defer stmtBlock.Close()
 
 	stmtTransaction, err := tx.Prepare(`
-		INSERT INTO blocks_transactions (block_slot, block_index, block_root, raw, txhash, nonce, gasprice, gaslimit, recipient, amount, payload)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO blocks_transactions (block_slot, block_index, block_root, raw, txhash, nonce, gasprice, gaslimit, sender, recipient, amount, payload)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		ON CONFLICT (block_slot, block_index) DO NOTHING`)
 	if err != nil {
 		return err
@@ -1325,7 +1325,7 @@ func saveBlocks(blocks map[uint64]map[string]*types.Block, tx *sql.Tx) error {
 			logger.Tracef("writing transactions data")
 			for i, tx := range b.ExecutionPayload.Transactions {
 				_, err := stmtTransaction.Exec(b.Slot, i, b.BlockRoot,
-					tx.Raw, tx.TxHash, tx.AccountNonce, tx.Price, tx.GasLimit, tx.Recipient, tx.Amount, tx.Payload)
+					tx.Raw, tx.TxHash, tx.AccountNonce, tx.Price, tx.GasLimit, tx.Sender, tx.Recipient, tx.Amount, tx.Payload)
 				if err != nil {
 					return fmt.Errorf("error executing stmtTransaction for block %v: %v", b.Slot, err)
 				}
