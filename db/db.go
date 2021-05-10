@@ -1311,6 +1311,7 @@ func saveBlocks(blocks map[uint64]map[string]*types.Block, tx *sql.Tx) error {
 				b.ExecutionPayload.StateRoot,
 				b.ExecutionPayload.Number,
 				b.ExecutionPayload.GasLimit,
+				b.ExecutionPayload.GasUsed,
 				b.ExecutionPayload.Timestamp,
 				b.ExecutionPayload.ReceiptRoot,
 				b.ExecutionPayload.LogsBloom,

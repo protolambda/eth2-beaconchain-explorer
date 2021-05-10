@@ -589,6 +589,15 @@ func (pc *PrysmClient) parseRpcBlock(block *ethpb.BeaconBlockContainer) (*types.
 		var decTx gtypes.Transaction
 
 		if err := decTx.DecodeRLP(rlp.NewStream(bytes.NewReader(rawTx), uint64(len(rawTx)))); err != nil {
+			tx.TxHash = []byte{}
+			tx.AccountNonce = 0
+			tx.Price = []byte{}
+			tx.GasLimit = 0
+			tx.Sender = []byte{}
+			tx.Recipient = []byte{}
+			tx.Amount = []byte{}
+			tx.Payload = []byte{}
+		} else {
 			h := decTx.Hash()
 			tx.TxHash = h[:]
 			tx.AccountNonce = decTx.Nonce()
