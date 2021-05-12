@@ -38,6 +38,20 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 	search := q.Get("search[value]")
 	search = strings.Replace(search, "0x", "", -1)
 
+	orderColumn := q.Get("order[0][column]")
+	orderByMap := map[string]string{
+		"1": "slot",
+		"5": "exec_transactioncount",
+	}
+	orderBy, exists := orderByMap[orderColumn]
+	if !exists {
+		orderBy = "slot"
+	}
+	orderDir := q.Get("order[0][dir]")
+	if orderDir != "desc" && orderDir != "asc" {
+		orderDir = "desc"
+	}
+
 	draw, err := strconv.ParseUint(q.Get("draw"), 10, 64)
 	if err != nil {
 		logger.Errorf("error converting datatables data parameter from string to int: %v", err)
@@ -70,16 +84,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		startSlot := blocksCount - start
-		endSlot := blocksCount - start - length + 1
-
-		if startSlot > 9223372036854775807 {
-			startSlot = blocksCount
-		}
-		if endSlot > 9223372036854775807 {
-			endSlot = 0
-		}
-		err = db.DB.Select(&blocks, `
+		err = db.DB.Select(&blocks, fmt.Sprintf(`
 			SELECT 
 				blocks.epoch, 
 				blocks.slot, 
@@ -87,6 +92,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 				blocks.blockroot, 
 				blocks.parentroot, 
 				blocks.attestationscount, 
+				blocks.exec_transactioncount,
 				blocks.depositscount, 
 				blocks.voluntaryexitscount, 
 				blocks.proposerslashingscount, 
@@ -98,8 +104,8 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 			FROM blocks 
 			LEFT JOIN validators ON blocks.proposer = validators.validatorindex
 			LEFT JOIN validator_names ON validators.pubkey = validator_names.publickey
-			WHERE blocks.slot >= $1 AND blocks.slot <= $2 
-			ORDER BY blocks.slot DESC`, endSlot, startSlot)
+			ORDER BY blocks.%s %s
+			LIMIT $1 OFFSET $2`, orderBy, orderDir), length, start)
 	} else {
 		err = db.DB.Get(&blocksCount, `
 			SELECT count(*) 
@@ -120,7 +126,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.DB.Select(&blocks, `
+		err = db.DB.Select(&blocks, fmt.Sprintf(`
 			SELECT 
 				blocks.epoch, 
 				blocks.slot, 
@@ -128,6 +134,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 				blocks.blockroot, 
 				blocks.parentroot, 
 				blocks.attestationscount, 
+				blocks.exec_transactioncount,
 				blocks.depositscount, 
 				blocks.voluntaryexitscount, 
 				blocks.proposerslashingscount, 
@@ -152,10 +159,10 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 						INNER JOIN validator_names ON validators.pubkey = validator_names.publickey
 						WHERE validator_names.name IS NOT NULL AND LOWER(validator_names.name) LIKE LOWER($2)
 					)
-				ORDER BY blocks.slot DESC 
+				ORDER BY blocks.%[1]s %[2]s
 				LIMIT $4
 				OFFSET $5
-			) ORDER BY blocks.slot DESC`,
+			) ORDER BY blocks.%[1]s %[2]s`, orderBy, orderDir),
 			search+"%", "%"+search+"%", fmt.Sprintf("%%%x%%", search), length, start)
 	}
 
@@ -174,6 +181,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 				template.HTML("<span class=\"badge text-dark\" style=\"background: rgba(179, 159, 70, 0.8) none repeat scroll 0% 0%;\">Genesis</span>"),
 				utils.FormatTimestamp(utils.SlotToTime(b.Slot).Unix()),
 				template.HTML("N/A"),
+				b.Transactions,
 				b.Attestations,
 				b.Deposits,
 				fmt.Sprintf("%v / %v", b.Proposerslashings, b.Attesterslashings),
@@ -188,6 +196,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 				utils.FormatBlockStatus(b.Status),
 				utils.FormatTimestamp(utils.SlotToTime(b.Slot).Unix()),
 				utils.FormatValidatorWithName(b.Proposer, b.ProposerName),
+				b.Transactions,
 				b.Attestations,
 				b.Deposits,
 				fmt.Sprintf("%v / %v", b.Proposerslashings, b.Attesterslashings),

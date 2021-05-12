@@ -168,6 +168,7 @@ type IndexPageDataBlocks struct {
 	BlockRootFormatted string        `json:"block_root_formatted"`
 	ParentRoot         []byte        `db:"parentroot" json:"parent_root"`
 	Attestations       uint64        `db:"attestationscount" json:"attestations"`
+	Transactions       uint64        `db:"exec_transactioncount" json:"transactions"`
 	Deposits           uint64        `db:"depositscount" json:"deposits"`
 	Exits              uint64        `db:"voluntaryexitscount" json:"exits"`
 	Proposerslashings  uint64        `db:"proposerslashingscount" json:"proposerslashings"`

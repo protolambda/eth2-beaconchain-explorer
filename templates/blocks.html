@@ -7,7 +7,7 @@
             var tblOpts = {
                 processing: true,
                 serverSide: true,
-                ordering: false,
+                ordering: true,
                 searching: true,
                 ajax: '/blocks/data',
                 pageLength: 50,
@@ -20,6 +20,20 @@
                         next: ">",
                     }
                 },
+                columnDefs: [
+                    { targets:  0, data:  '0', orderable: false}, 
+                    { targets:  1, data:  '1', orderable: true }, 
+                    { targets:  2, data:  '2', orderable: false}, 
+                    { targets:  3, data:  '3', orderable: false}, 
+                    { targets:  4, data:  '4', orderable: false}, 
+                    { targets:  5, data:  '5', orderable: true}, 
+                    { targets:  6, data:  '6', orderable: false}, 
+                    { targets:  7, data:  '7', orderable: false}, 
+                    { targets:  8, data:  '8', orderable: false}, 
+                    { targets:  9, data:  '9', orderable: false}, 
+                    { targets: 10, data: '10', orderable: false}, 
+                    { targets: 11, data: '11', orderable: false}, 
+                ],
                 preDrawCallback: function () {
                     // this does not always work.. not sure how to solve the staying tooltip
                     try {
@@ -75,13 +89,10 @@
                                 <th>Status</th>
                                 <th>Time</th>
                                 <th>Proposer</th>
-                                <th data-toggle="tooltip" data-placement="top" title="Attestations included in slot">Att
-                                </th>
-                                <th data-toggle="tooltip" data-placement="top" title="Deposits included in block">Dep
-                                </th>
-                                <th data-toggle="tooltip" data-placement="top" title="Slashings Proposer/Attester">S-
-                                    <span>P</span>/<span>A</span>
-                                </th>
+                                <th data-toggle="tooltip" data-placement="top" title="Transactions included in slot">Txs</th>
+                                <th data-toggle="tooltip" data-placement="top" title="Attestations included in slot">Att</th>
+                                <th data-toggle="tooltip" data-placement="top" title="Deposits included in block">Dep</th>
+                                <th data-toggle="tooltip" data-placement="top" title="Slashings Proposer/Attester">S-<span>P</span>/<span>A</span></th>
                                 <th>Exits</th>
                                 <th>Votes</th>
                                 <th>Graffiti</th>
