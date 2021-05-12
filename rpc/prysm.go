@@ -6,10 +6,11 @@ import (
 	"eth2-exporter/types"
 	"eth2-exporter/utils"
 	"fmt"
-	"github.com/ethereum/go-ethereum/rlp"
 	"math/big"
 	"sync"
 	"time"
+
+	"github.com/ethereum/go-ethereum/rlp"
 
 	lru "github.com/hashicorp/golang-lru"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
@@ -610,7 +611,12 @@ func (pc *PrysmClient) parseRpcBlock(block *ethpb.BeaconBlockContainer) (*types.
 			} else {
 				tx.Sender = msg.From().Bytes()
 			}
-			tx.Recipient = decTx.To().Bytes()
+			decTxTo := decTx.To()
+			if decTxTo != nil {
+				tx.Recipient = decTxTo.Bytes()
+			} else {
+				tx.Recipient = []byte{}
+			}
 			tx.Amount = decTx.Value().Bytes()
 			tx.Payload = decTx.Data()
 		}
