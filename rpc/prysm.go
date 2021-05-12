@@ -610,7 +610,11 @@ func (pc *PrysmClient) parseRpcBlock(block *ethpb.BeaconBlockContainer) (*types.
 			} else {
 				tx.Sender = msg.From().Bytes()
 			}
-			tx.Recipient = decTx.To().Bytes()
+			if decTx.To() != nil {
+				tx.Recipient = decTx.To().Bytes()
+			} else {
+				tx.Recipient = make([]byte, 0)
+			}
 			tx.Amount = decTx.Value().Bytes()
 			tx.Payload = decTx.Data()
 		}
