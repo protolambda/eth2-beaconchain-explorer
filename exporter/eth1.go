@@ -16,10 +16,10 @@ import (
 	gethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	gethRPC "github.com/ethereum/go-ethereum/rpc"
-	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/prysmaticlabs/go-ssz"
 	contracts "github.com/prysmaticlabs/prysm/contracts/deposit-contract"
 	pb "github.com/prysmaticlabs/prysm/proto/beacon/p2p/v1"
+	ethpb "github.com/prysmaticlabs/prysm/proto/eth/v1alpha1"
 	"github.com/prysmaticlabs/prysm/shared/bls"
 	"github.com/prysmaticlabs/prysm/shared/bytesutil"
 	"github.com/prysmaticlabs/prysm/shared/hashutil"
@@ -381,13 +381,6 @@ func computeForkDataRoot(version []byte, root []byte) ([32]byte, error) {
 
 func VerifyEth1DepositSignature(obj *ethpb.Deposit_Data) error {
 	cfg := params.BeaconConfig()
-	if utils.Config.Chain.Network == "altona" {
-		cfg = params.AltonaConfig()
-	} else if utils.Config.Chain.Network == "medalla" {
-		cfg = params.MedallaConfig()
-	} else if utils.Config.Chain.Network == "spadina" {
-		cfg = params.SpadinaConfig()
-	}
 	domain, err := ComputeDomain(
 		cfg.DomainDeposit,
 		cfg.GenesisForkVersion,
