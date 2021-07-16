@@ -94,6 +94,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 				blocks.voluntaryexitscount, 
 				blocks.proposerslashingscount, 
 				blocks.attesterslashingscount, 
+				blocks.syncaggregateparticipation, 
 				blocks.status, 
 				COALESCE((SELECT SUM(ARRAY_LENGTH(validators, 1)) FROM blocks_attestations WHERE beaconblockroot = blocks.blockroot), 0) AS votes,
 				blocks.graffiti,
@@ -177,6 +178,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 				blocks.voluntaryexitscount, 
 				blocks.proposerslashingscount, 
 				blocks.attesterslashingscount, 
+				blocks.syncaggregateparticipation, 
 				blocks.status, 
 				COALESCE((SELECT SUM(ARRAY_LENGTH(validators, 1)) FROM blocks_attestations WHERE beaconblockroot = blocks.blockroot), 0) AS votes, 
 				blocks.graffiti,
@@ -216,6 +218,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 				fmt.Sprintf("%v / %v", b.Proposerslashings, b.Attesterslashings),
 				b.Exits,
 				b.Votes,
+				fmt.Sprintf("%.2f", b.SyncAggParticipation*100.0),
 				utils.FormatGraffitiAsLink(b.Graffiti),
 			}
 		} else {
@@ -230,6 +233,7 @@ func BlocksData(w http.ResponseWriter, r *http.Request) {
 				fmt.Sprintf("%v / %v", b.Proposerslashings, b.Attesterslashings),
 				b.Exits,
 				b.Votes,
+				fmt.Sprintf("%.2f", b.SyncAggParticipation*100.0),
 				utils.FormatGraffitiAsLink(b.Graffiti),
 			}
 		}
