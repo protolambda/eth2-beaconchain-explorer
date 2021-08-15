@@ -40,7 +40,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.9.0
 	github.com/protolambda/zrnt v0.12.4
-	github.com/protolambda/zssz v0.1.5 // indirect
+	github.com/protolambda/zssz v0.1.5
 	github.com/protolambda/ztyp v0.1.0
 	github.com/prysmaticlabs/eth2-types v0.0.0-20210303084904-c9735a06829d
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210706153858-5cb5ce8bdbfe
