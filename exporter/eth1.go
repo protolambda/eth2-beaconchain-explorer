@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"context"
+	"crypto/sha256"
 	"eth2-exporter/db"
 	"eth2-exporter/types"
 	"eth2-exporter/utils"
@@ -369,14 +370,20 @@ func domain(domainType [DomainByteLength]byte, forkDataRoot []byte) []byte {
 }
 
 func computeForkDataRoot(version []byte, root []byte) ([32]byte, error) {
-	r, err := ssz.HashTreeRoot(&pb.ForkData{
-		CurrentVersion:        version,
-		GenesisValidatorsRoot: root,
-	})
-	if err != nil {
-		return [32]byte{}, err
+	h := sha256.New()
+	if len(version) != 4 {
+		panic(fmt.Errorf("incorrect version length, got version: '%x'", version))
 	}
-	return r, nil
+	if len(root) != 32 {
+		panic(fmt.Errorf("incorrect root length, got root: '%x'", root))
+	}
+	h.Write(version)
+	h.Write(make([]byte, 32-4))
+	h.Write(root)
+	r := h.Sum(nil)
+	var out [32]byte
+	copy(out[:], r)
+	return out, nil
 }
 
 func VerifyEth1DepositSignature(obj *ethpb.Deposit_Data) error {
