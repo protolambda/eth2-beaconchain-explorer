@@ -513,47 +513,25 @@ func (lc *LighthouseClient) GetBlocksBySlot(slot uint64) ([]*types.Block, error)
 
 	if payload := parsedBlock.Message.Body.ExecutionPayload; payload != nil && !bytes.Equal(payload.ParentHash, make([]byte, 32)) {
 		txs := make([]*types.Transaction, 0, len(payload.Transactions))
-		for _, rawTx := range payload.Transactions {
-			// TODO: Decide how to deal with fields that can't be obtained.
-			//       DB expects non nil values. Currently just defaulting everything to 0.
-			tx := &types.Transaction{
-				Raw:       rawTx,
-				TxHash:    []byte{0},
-				Sender:    []byte{0},
-				Recipient: []byte{0},
-				Amount:    []byte{0},
-				Payload:   []byte{0},
-				Price:     []byte{0},
-			}
+		for i, rawTx := range payload.Transactions {
+			tx := &types.Transaction{Raw: rawTx}
 			var decTx gtypes.Transaction
-			if err := decTx.UnmarshalBinary(rawTx); err == nil {
+			if err := decTx.UnmarshalBinary(rawTx); err != nil {
+				logger.Errorf("skipping tx, error parsing tx %d block %x: %v", i, payload.BlockHash, err)
+				continue
+			} else {
 				h := decTx.Hash()
 				tx.TxHash = h[:]
 				tx.AccountNonce = decTx.Nonce()
 				// big endian
-				if v := decTx.GasPrice(); v != nil {
-					tx.Price = v.Bytes()
-				}
+				tx.Price = decTx.GasPrice().Bytes()
 				tx.GasLimit = decTx.Gas()
-				if v := decTx.Data(); v != nil {
-					tx.Payload = v
-				}
-				if v := decTx.To(); v != nil {
-					tx.Recipient = v.Bytes()
-				}
-				if v := decTx.Value(); v != nil {
-					tx.Amount = v.Bytes()
-				}
-				if v := decTx.GasTipCap(); v != nil {
-					tx.MaxPriorityFeePerGas = v.Uint64()
-				}
-				if v := decTx.GasFeeCap(); v != nil {
-					tx.MaxFeePerGas = v.Uint64()
-				}
-				if sender, err := lc.signer.Sender(&decTx); err == nil {
-					tx.Sender = sender.Bytes()
-				}
-
+				//tx.Sender = TODO sender
+				tx.Recipient = decTx.To().Bytes()
+				tx.Amount = decTx.Value().Bytes()
+				tx.Payload = decTx.Data()
+				tx.MaxPriorityFeePerGas = decTx.GasTipCap().Uint64()
+				tx.MaxFeePerGas = decTx.GasFeeCap().Uint64()
 			}
 			txs = append(txs, tx)
 		}
