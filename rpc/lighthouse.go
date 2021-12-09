@@ -512,12 +512,20 @@ func (lc *LighthouseClient) GetBlocksBySlot(slot uint64) ([]*types.Block, error)
 	}
 
 	if payload := parsedBlock.Message.Body.ExecutionPayload; payload != nil && !bytes.Equal(payload.ParentHash, make([]byte, 32)) {
-		txs := make([]*types.Transaction, 0, len(payload.Transactions))
+		txs := make([]*types.Transaction, len(payload.Transactions))
 		for i, rawTx := range payload.Transactions {
-			tx := &types.Transaction{Raw: rawTx}
+			tx := &types.Transaction{
+				TxHash:    []byte{},
+				Price:     []byte{},
+				Sender:    []byte{},
+				Recipient: []byte{},
+				Amount:    []byte{},
+				Payload:   []byte{},
+				Raw:       rawTx,
+			}
 			var decTx gtypes.Transaction
 			if err := decTx.UnmarshalBinary(rawTx); err != nil {
-				return nil, fmt.Errorf("error parsing tx %d block %x: %v", i, payload.BlockHash, err)
+				logger.Errorf("error parsing tx %d block %x: %v", i, payload.BlockHash, err)
 			} else {
 				h := decTx.Hash()
 				tx.TxHash = h[:]
@@ -527,7 +535,7 @@ func (lc *LighthouseClient) GetBlocksBySlot(slot uint64) ([]*types.Block, error)
 				tx.GasLimit = decTx.Gas()
 				sender, err := lc.signer.Sender(&decTx)
 				if err != nil {
-					return nil, fmt.Errorf("transaction with invalid sender (tx hash: %x): %v", h, err)
+					logger.Errorf("transaction with invalid sender (tx hash: %x): %v", h, err)
 				}
 				tx.Sender = sender.Bytes()
 				if v := decTx.To(); v != nil {
@@ -540,7 +548,7 @@ func (lc *LighthouseClient) GetBlocksBySlot(slot uint64) ([]*types.Block, error)
 				tx.MaxPriorityFeePerGas = decTx.GasTipCap().Uint64()
 				tx.MaxFeePerGas = decTx.GasFeeCap().Uint64()
 			}
-			txs = append(txs, tx)
+			txs[i] = tx
 		}
 		block.ExecutionPayload = &types.ExecutionPayload{
 			ParentHash:    payload.ParentHash,
