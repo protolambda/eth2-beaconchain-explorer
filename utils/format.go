@@ -26,16 +26,31 @@ func FormatMessageToHtml(message string) template.HTML {
 	return template.HTML(message)
 }
 
+// FormatSyncParticipationStatus will return a user-friendly format for an sync-participation-status number
+func FormatSyncParticipationStatus(status uint64) template.HTML {
+	if status == 0 {
+		return `<span class="badge badge-pill bg-light text-dark" style="font-size: 12px; font-weight: 500;">Scheduled</span>`
+	} else if status == 1 {
+		return `<span class="badge badge-pill bg-success text-white" style="font-size: 12px; font-weight: 500;">Participated</span>`
+	} else if status == 2 {
+		return `<span class="badge badge-pill bg-danger text-white" style="font-size: 12px; font-weight: 500;">Missed</span>`
+	} else if status == 3 {
+		return `<span class="badge badge-pill bg-warning text-white" style="font-size: 12px; font-weight: 500;">No Block</span>`
+	} else {
+		return "Unknown"
+	}
+}
+
 // FormatAttestationStatus will return a user-friendly attestation for an attestation status number
 func FormatAttestationStatus(status uint64) template.HTML {
 	if status == 0 {
-		return "<span class=\"badge bg-light text-dark\">Scheduled</span>"
+		return `<span class="badge badge-pill bg-light text-dark" style="font-size: 12px; font-weight: 500;">Scheduled</span>`
 	} else if status == 1 {
-		return "<span class=\"badge bg-success text-white\">Attested</span>"
+		return `<span class="badge badge-pill bg-success text-white" style="font-size: 12px; font-weight: 500;">Attested</span>`
 	} else if status == 2 {
-		return "<span class=\"badge bg-warning text-dark\">Missed</span>"
+		return `<span class="badge badge-pill bg-warning text-white" style="font-size: 12px; font-weight: 500;">Missed</span>`
 	} else if status == 3 {
-		return "<span class=\"badge bg-warning text-dark\">Orphaned</span>"
+		return `<span class="badge badge-pill bg-warning text-white" style="font-size: 12px; font-weight: 500;">Orphaned</span>`
 	} else {
 		return "Unknown"
 	}
@@ -44,17 +59,17 @@ func FormatAttestationStatus(status uint64) template.HTML {
 // FormatAttestationStatusShort will return a user-friendly attestation for an attestation status number
 func FormatAttestationStatusShort(status uint64) template.HTML {
 	if status == 0 {
-		return "<span title=\"Scheduled\" data-toggle=\"tooltip\"  class=\"badge bg-light text-dark\">Sche.</span>"
+		return `<span title="Scheduled" data-toggle="tooltip" class="badge badge-pill bg-light text-dark" style="font-size: 12px; font-weight: 500;">Sche.</span>`
 	} else if status == 1 {
-		return "<span title=\"Attested\" data-toggle=\"tooltip\"   class=\"badge bg-success text-white\">Att.</span>"
+		return `<span title="Attested" data-toggle="tooltip" class="badge badge-pill bg-success text-white" style="font-size: 12px; font-weight: 500;">Att.</span>`
 	} else if status == 2 {
-		return "<span title=\"Missed\" data-toggle=\"tooltip\"  class=\"badge bg-warning text-dark\">Miss.</span>"
+		return `<span title="Missed" data-toggle="tooltip" class="badge badge-pill bg-warning text-white" style="font-size: 12px; font-weight: 500;">Miss.</span>`
 	} else if status == 3 {
-		return "<span title=\"Orphaned\" data-toggle=\"tooltip\"  class=\"badge bg-warning text-dark\">Orph.</span>"
+		return `<span title="Orphaned" data-toggle="tooltip" class="badge badge-pill bg-warning text-white" style="font-size: 12px; font-weight: 500;">Orph.</span>`
 	} else if status == 4 {
-		return "<span title=\"Inactivity Leak\" data-toggle=\"tooltip\"  class=\"badge bg-danger text-dark\">Leak</span>"
+		return `<span title="Inactivity Leak" data-toggle="tooltip" class="badge badge-pill bg-danger text-white" style="font-size: 12px; font-weight: 500;">Leak</span>`
 	} else if status == 5 {
-		return "<span title=\"Inactive\" data-toggle=\"tooltip\"  class=\"badge bg-light text-dark\">Inac.</span>"
+		return `<span title="Inactive" data-toggle="tooltip" class="badge badge-pill bg-light text-dark" style="font-size: 12px; font-weight: 500;">Inac.</span>`
 	} else {
 		return "Unknown"
 	}
@@ -246,13 +261,13 @@ func FormatSlotToTimestamp(blockSlot uint64) template.HTML {
 func FormatBlockStatus(status uint64) template.HTML {
 	// genesis <span class="badge text-dark" style="background: rgba(179, 159, 70, 0.8) none repeat scroll 0% 0%;">Genesis</span>
 	if status == 0 {
-		return "<span class=\"badge bg-light text-dark\">Scheduled</span>"
+		return `<span class="badge badge-pill bg-light text-dark" style="font-size: 12px; font-weight: 500;">Scheduled</span>`
 	} else if status == 1 {
-		return "<span class=\"badge bg-success text-white\">Proposed</span>"
+		return `<span class="badge badge-pill bg-success text-white" style="font-size: 12px; font-weight: 500;">Proposed</span>`
 	} else if status == 2 {
-		return "<span class=\"badge bg-warning text-dark\">Missed</span>"
+		return `<span class="badge badge-pill bg-warning text-white" style="font-size: 12px; font-weight: 500;">Missed</span>`
 	} else if status == 3 {
-		return "<span class=\"badge bg-secondary text-white\">Orphaned</span>"
+		return `<span class="badge badge-pill bg-secondary text-white" style="font-size: 12px; font-weight: 500;">Orphaned</span>`
 	} else {
 		return "Unknown"
 	}
@@ -262,13 +277,13 @@ func FormatBlockStatus(status uint64) template.HTML {
 func FormatBlockStatusShort(status uint64) template.HTML {
 	// genesis <span class="badge text-dark" style="background: rgba(179, 159, 70, 0.8) none repeat scroll 0% 0%;">Genesis</span>
 	if status == 0 {
-		return "<span title=\"Scheduled\" data-toggle=\"tooltip\" class=\"badge bg-light text-dark\">Sche.</span>"
+		return `<span title="Scheduled" data-toggle="tooltip" class="badge badge-pill bg-light text-dark" style="font-size: 12px; font-weight: 500;">Sche.</span>`
 	} else if status == 1 {
-		return "<span title=\"Proposed\" data-toggle=\"tooltip\" class=\"badge bg-success text-white\">Prop.</span>"
+		return `<span title="Proposed" data-toggle="tooltip" class="badge badge-pill bg-success text-white" style="font-size: 12px; font-weight: 500;">Prop.</span>`
 	} else if status == 2 {
-		return "<span title=\"Missed\" data-toggle=\"tooltip\" class=\"badge bg-warning text-dark\">Miss.</span>"
+		return `<span title="Missed" data-toggle="tooltip" class="badge badge-pill bg-warning text-white" style="font-size: 12px; font-weight: 500;">Miss.</span>`
 	} else if status == 3 {
-		return "<span title=\"Orphaned\" data-toggle=\"tooltip\" class=\"badge bg-secondary text-white\">Orph.</span>"
+		return `<span title="Orphaned" data-toggle="tooltip" class="badge badge-pill bg-secondary text-white" style="font-size: 12px; font-weight: 500;">Orph.</span>`
 	} else {
 		return "Unknown"
 	}
@@ -310,6 +325,11 @@ func FormatEpoch(epoch uint64) template.HTML {
 func FormatEth1AddressString(addr []byte) template.HTML {
 	eth1Addr := eth1common.BytesToAddress(addr)
 	return template.HTML(fmt.Sprintf("%s", eth1Addr.Hex()))
+}
+
+// FormatEth1AddressString will return the eth1-address formated as html string
+func FormatEth1AddressStringLowerCase(addr []byte) template.HTML {
+	return template.HTML(fmt.Sprintf("0x%x", addr))
 }
 
 // FormatEth1Address will return the eth1-address formated as html
@@ -446,6 +466,39 @@ func formatBits(b []byte, hasDelimiterBit bool) template.HTML {
 		buf.WriteString("<br/>")
 	}
 	buf.WriteString("</div>")
+	return template.HTML(buf.String())
+}
+
+func formatBitvectorValidators(bits []byte, validators []uint64) template.HTML {
+	invalidLen := false
+	if len(bits)*8 != len(validators) {
+		invalidLen = true
+	}
+	var buf strings.Builder
+	buf.WriteString("<pre class=\"text-monospace\" style=\"font-size:1rem;\">")
+	for i := 0; i < len(bits)*8; i++ {
+		if invalidLen {
+			if BitAtVector(bits, i) {
+				buf.WriteString("1")
+			} else {
+				buf.WriteString("0")
+			}
+		} else {
+			val := validators[i]
+			if BitAtVector(bits, i) {
+				buf.WriteString(fmt.Sprintf("<a title=\"Validator %[1]d\" href=\"/validator/%[1]d\">1</a>", val))
+			} else {
+				buf.WriteString(fmt.Sprintf("<a title=\"Validator %[1]d\" href=\"/validator/%[1]d\">0</a>", val))
+			}
+		}
+
+		if (i+1)%64 == 0 {
+			buf.WriteString(fmt.Sprintf("\n"))
+		} else if (i+1)%8 == 0 {
+			buf.WriteString(fmt.Sprintf(" "))
+		}
+	}
+	buf.WriteString("</pre>")
 	return template.HTML(buf.String())
 }
 
@@ -611,10 +664,10 @@ func formatPool(tag []string) string {
 					}
 					name += s + " "
 				}
-				return fmt.Sprintf(`<a href='/pools' style="all: unset; cursor: pointer;" data-toggle="tooltip" title="This validator is part of a staking-pool"><span style="font-size: 12px;" class="bg-light text-dark badge-pill pr-2 pl-0 mr-1"><span class="bg-dark text-light rounded-left mr-1 px-1">%s</span> %s</span></a>`, tagType, name)
+				return fmt.Sprintf(`<a href='/pools' style="all: unset; cursor: pointer;" data-toggle="tooltip" title="This validator is part of a staking-pool"><span style="font-size: 18px;" class="bg-light text-dark badge-pill pr-2 pl-0 mr-1"><span class="bg-dark text-light rounded-left mr-1 px-1">%s</span> %s</span></a>`, tagType, name)
 			}
 		}
-		return fmt.Sprintf(`<a href='/pools' style="all: unset; cursor: pointer;" data-toggle="tooltip" title="This validator is part of a staking-pool"><span style="font-size: 12px;" class="bg-light text-dark badge-pill pr-2 pl-0 mr-1"><span class="bg-dark text-light rounded-left mr-1 px-1">%s</span> %s</span></a>`, tagType, tag[len(tag)-1])
+		return fmt.Sprintf(`<a href='/pools' style="all: unset; cursor: pointer;" data-toggle="tooltip" title="This validator is part of a staking-pool"><span style="font-size: 18px;" class="bg-light text-dark badge-pill pr-2 pl-0 mr-1"><span class="bg-dark text-light rounded-left mr-1 px-1">%s</span> %s</span></a>`, tagType, tag[len(tag)-1])
 	}
 	return ""
 }
@@ -626,8 +679,7 @@ func formatSpecialTag(tag string) string {
 			return formatPool(special_tag)
 		}
 	}
-
-	return fmt.Sprintf(`<span style="font-size: 12px;" class="badge bg-dark text-light mr-1">%s</span>`, tag)
+	return fmt.Sprintf(`<span style="font-size: 18px;" class="badge bg-dark text-light mr-1">%s</span>`, tag)
 }
 
 // FormatValidatorTag will return html formated text of a validator-tag.
@@ -636,9 +688,9 @@ func FormatValidatorTag(tag string) template.HTML {
 	var result string
 	switch tag {
 	case "rocketpool":
-		result = fmt.Sprintf(`<span style="background:yellow; font-size: 12px;" class="badge-pill text-dark mr-1" data-toggle="tooltip" title="RocketPool Validator"><a href="/pools/rocketpool">%s</a></span>`, tag)
+		result = `<span style="background-color: rgba(240, 149, 45, .2); font-size: 18px;" class="badge-pill mr-1 font-weight-normal" data-toggle="tooltip" title="Rocket Pool Validator"><a style="color: var(--yellow);" href="/pools/rocketpool">Rocket Pool</a></span>`
 	case "ssv":
-		result = fmt.Sprintf(`<span style="background:orange; font-size: 12px;" class="badge-pill text-dark mr-1" data-toggle="tooltip" title="Secret Shared Validator"><a href="https://github.com/bloxapp/ssv/">%s</a></span>`, tag)
+		result = `<span style="background-color: rgba(238, 113, 18, .2); font-size: 18px;" class="badge-pill mr-1 font-weight-normal" data-toggle="tooltip" title="Secret Shared Validator"><a style="color: var(--orange);" href="https://github.com/bloxapp/ssv/">SSV</a></span>`
 	default:
 		result = formatSpecialTag(tag)
 	}
@@ -691,6 +743,15 @@ func FormatEth1AddressWithName(address []byte, name string) template.HTML {
 // FormatValidatorInt64 will return html formatted text for a validator (for an int64 validator-id)
 func FormatValidatorInt64(validator int64) template.HTML {
 	return FormatValidator(uint64(validator))
+}
+
+// FormatValidatosrInt64 will return html formatted text for validators
+func FormatValidatorsInt64(validators []int64) template.HTML {
+	formatedValidators := make([]string, len(validators))
+	for i, v := range validators {
+		formatedValidators[i] = string(FormatValidatorInt64(v))
+	}
+	return template.HTML(strings.Join(formatedValidators, " "))
 }
 
 // FormatSlashedValidatorInt64 will return html formatted text for a slashed validator
@@ -751,9 +812,9 @@ func FormatSlashedValidatorsWithName(validators []uint64, nameMap map[uint64]str
 // FormatYesNo will return yes or no formated as html
 func FormatYesNo(yes bool) template.HTML {
 	if yes {
-		return `<span class="badge bg-success text-white">Yes</span>`
+		return `<span class="badge badge-pill bg-success text-white" style="font-size: 12px; font-weight: 500;">Yes</span>`
 	}
-	return `<span class="badge bg-warning text-dark">No</span>`
+	return `<span class="badge badge-pill bg-warning text-white" style="font-size: 12px; font-weight: 500;">No</span>`
 }
 
 func FormatValidatorName(name string) template.HTML {
@@ -777,7 +838,7 @@ func FormatAttestationInclusionEffectiveness(eff float64) template.HTML {
 	}
 }
 
-func FormatPercentageColored(percentage float64, tooltipText string) template.HTML {
+func FormatPercentageColoredEmoji(percentage float64) template.HTML {
 	if math.IsInf(percentage, 0) || math.IsNaN(percentage) {
 		percentage = 0
 	} else {
@@ -793,6 +854,24 @@ func FormatPercentageColored(percentage float64, tooltipText string) template.HT
 		return template.HTML(fmt.Sprintf(`<span class="text-warning">%.0f%% <i class="fas fa-meh"></i></span>`, percentage))
 	}
 	return template.HTML(fmt.Sprintf(`<span class="text-danger">%.0f%% <i class="fas fa-frown"></i></span>`, percentage))
+}
+
+func FormatPercentageColored(percentage float64) template.HTML {
+	if math.IsInf(percentage, 0) || math.IsNaN(percentage) {
+		percentage = 0
+	} else {
+		percentage = percentage * 100
+	}
+	if percentage == 100 {
+		return template.HTML(fmt.Sprintf(`<span class="text-success">%.0f%%</span>`, percentage))
+	} else if percentage >= 90 {
+		return template.HTML(fmt.Sprintf(`<span class="text-success">%.0f%%</span>`, percentage))
+	} else if percentage >= 80 {
+		return template.HTML(fmt.Sprintf(`<span class="text-warning">%.0f%%</span>`, percentage))
+	} else if percentage >= 60 {
+		return template.HTML(fmt.Sprintf(`<span class="text-warning">%.0f%% </span>`, percentage))
+	}
+	return template.HTML(fmt.Sprintf(`<span class="text-danger">%.0f%%</span>`, percentage))
 }
 
 func DerefString(str *string) string {

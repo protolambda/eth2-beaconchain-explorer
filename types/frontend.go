@@ -33,6 +33,11 @@ const (
 	MonitoringMachineSwitchedToETH2FallbackEventName EventName = "monitoring_fallback_eth2inuse"
 	MonitoringMachineSwitchedToETH1FallbackEventName EventName = "monitoring_fallback_eth1inuse"
 	TaxReportEventName                               EventName = "user_tax_report"
+	RocketpoolCommissionThresholdEventName           EventName = "rocketpool_commision_threshold"
+	RocketpoolNewClaimRoundStartedEventName          EventName = "rocketpool_new_claimround"
+	RocketpoolColleteralMinReached                   EventName = "rocketpool_colleteral_min"
+	RocketpoolColleteralMaxReached                   EventName = "rocketpool_colleteral_max"
+	SyncCommitteeSoon                                EventName = "validator_synccommittee_soon"
 )
 
 var EventNames = []EventName{
@@ -58,6 +63,11 @@ var EventNames = []EventName{
 	MonitoringMachineSwitchedToETH1FallbackEventName,
 	MonitoringMachineMemoryUsageEventName,
 	TaxReportEventName,
+	RocketpoolCommissionThresholdEventName,
+	RocketpoolNewClaimRoundStartedEventName,
+	RocketpoolColleteralMinReached,
+	RocketpoolColleteralMaxReached,
+	SyncCommitteeSoon,
 }
 
 func GetDisplayableEventName(event EventName) string {
@@ -90,9 +100,9 @@ type Notification interface {
 }
 
 type Subscription struct {
-	ID             uint64     `db:"id"`
-	UserID         uint64     `db:"user_id"`
-	EventName      EventName  `db:"event_name"`
+	ID             *uint64    `db:"id,omitempty"`
+	UserID         *uint64    `db:"user_id,omitempty"`
+	EventName      string     `db:"event_name"`
 	EventFilter    string     `db:"event_filter"`
 	LastSent       *time.Time `db:"last_sent_ts"`
 	LastEpoch      *uint64    `db:"last_sent_epoch"`
@@ -102,10 +112,11 @@ type Subscription struct {
 }
 
 type TaggedValidators struct {
-	UserID uint64 `db:"user_id"`
-	Tag    string `db:"tag"`
-	Validator
-	Events []EventName `db:"events"`
+	UserID             uint64 `db:"user_id"`
+	Tag                string `db:"tag"`
+	ValidatorPublickey []byte `db:"validator_publickey"`
+	Validator          *Validator
+	Events             []EventName `db:"events"`
 }
 
 type MinimalTaggedValidators struct {

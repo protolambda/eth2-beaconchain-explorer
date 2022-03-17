@@ -25,6 +25,10 @@
         {
             id: 'nimbus-graffiti',
             config: "./{exporter-arch} --server.address='https://beaconcha.in/api/v1/client/metrics?apikey={apiKey}{machineName}' --beaconnode.type=nimbus --beaconnode.address=http://localhost:8008/metrics"
+        },
+        {
+            id: 'teku-graffiti',
+            config: "--metrics-publish-endpoint https://beaconcha.in/api/v1/client/metrics?apikey={apiKey}{machineName}"
         }
     ]
 
@@ -661,13 +665,27 @@
                                                 </button>
                                             </h2>
                                             <div id="collapseFour" class="collapse" aria-labelledby="headingFour"
-                                                data-parent="#accordionExample" style="margin: 15px;">
-                                                <div class="accordion-body">
-                                                   
-                                                    Not yet supported, cooming soon.
+                                            data-parent="#accordionExample" style="margin: 15px;">
+                                            <div class="accordion-body">
+                                                
+                                                Copy & Paste the following flags to your Teku validator client:<br/><br/>
 
+                                                <div style="margin-left: 5px; margin-right: 5px;">
+                                                    <div style="float: left;  width: 90%;">
+                                                        <code >
+                                                            <span id="teku-graffiti"></span>
+                                                        </code>
+                                                    </div>
+                                                    <div style="float: right;">
+                                                        <a id="copy-teku-graffiti" data-toggle="tooltip" data-original-title="Copy Command"
+                                                        data-clipboard-text="" class="d-none btn btn-primary ml-2 btn-icon-inside btn-sm text-white">
+                                                        <span class="fa fa-copy icon-inside" ></span> </a>
+                                                    </div>
                                                 </div>
+                                                <div style="clear: both;"></div><br/>
+                                             
                                             </div>
+                                        </div>
                                         </div>
                                     </div>
 
@@ -724,6 +742,7 @@
                                         <h5>Device: {{ $value.DeviceName }}</h5>
                                         <h6>Linked App: {{ $value.AppName }}</h6>
                                     </div>
+                                    {{ if not (eq $value.AppName "Ethpool Solo Staking") }}
                                     <div >
                                         <a style="color: #fff" id="active_{{ $value.ID }}" data-deviceid="{{ $value.ID }}"
                                             class="btn btn-danger ml-2 btn-icon-inside btn-sm text-white device-delete-btn"
@@ -739,6 +758,7 @@
                                             CURRENT_DELETE_DEVICE_ID = deviceId;
                                         });
                                     </script>
+                                    {{end}}
                                 </div>
                                 <br />
                                 <span style="margin-left:4%;">
@@ -818,13 +838,13 @@
                                     <span style="font-weight:bold">
                                         <i class="fas fa-key"></i>
                                     </span>
-                                    <span style="font-size: 90%; user-select: all;">
-                                        {{.Subscription.ApiKey}}
+                                    <span style="font-size: 90%;">
+                                        <span style="user-select: all;">{{.Subscription.ApiKey}}</span>
                                         <a style="color: #fff" id="copy-apiKey" data-toggle="tooltip"
                                             data-original-title="Copy API Key"
                                             data-clipboard-text="{{.Subscription.ApiKey}}"
                                             class="btn btn-primary mb-1 btn-icon-inside">
-                                            <span class="fa fa-copy icon-inside"></span>
+                                            <span class="fa fa-copy icon-inside text-white"></span>
                                         </a>
                                     </span>
                                 </div>
@@ -856,10 +876,12 @@
                                     <div>Daily:</div> 
                                     <div>{{formatThousandsInt .ApiStatistics.Daily}} / {{formatThousandsInt .ApiStatistics.MaxDaily}}</div>
                                 </div>
-                                <div class="progress">
+                                {{ if .ApiStatistics.Daily }}
+                                <div style="white-space: nowrap;" class="progress">
                                     {{$percentageDaily := formatPercentage (divInt .ApiStatistics.Daily .ApiStatistics.MaxDaily)}}
-                                    <div class="progress-bar" role="progressbar" style="width: {{$percentageDaily}}%;" aria-valuenow="{{.ApiStatistics.Daily}}" aria-valuemin="0" aria-valuemax="{{.ApiStatistics.MaxDaily}}">{{$percentageDaily}} %</div>
+                                    <div class="progress-bar" role="progressbar" style="width: {{$percentageDaily}}%; white-space: no-wrap;" aria-valuenow="{{.ApiStatistics.Daily}}" aria-valuemin="0" aria-valuemax="{{.ApiStatistics.MaxDaily}}">{{$percentageDaily}} %</div>
                                 </div>
+                                {{end}}
                             </div>
                             {{ end }}
                             <div class="my-3">
@@ -867,10 +889,12 @@
                                     <div>Monthly:</div> 
                                     <div>{{formatThousandsInt .ApiStatistics.Monthly}} / {{formatThousandsInt .ApiStatistics.MaxMonthly}}</div>
                                 </div>
-                                <div class="progress">
+                                {{ if .ApiStatistics.Monthly}}
+                                <div style="white-space: nowrap;" class="progress">
                                     {{$percentageMonthly := formatPercentage (divInt .ApiStatistics.Monthly .ApiStatistics.MaxMonthly)}}
-                                    <div class="progress-bar" role="progressbar" style="width: {{$percentageMonthly}}%;" aria-valuenow="{{.ApiStatistics.Monthly}}" aria-valuemin="0" aria-valuemax="{{.ApiStatistics.MaxMonthly}}">{{$percentageMonthly}} %</div>
+                                    <div class="progress-bar" role="progressbar" style="width: {{$percentageMonthly}}%; white-space: nowrap;" aria-valuenow="{{.ApiStatistics.Monthly}}" aria-valuemin="0" aria-valuemax="{{.ApiStatistics.MaxMonthly}}">{{$percentageMonthly}} %</div>
                                 </div>
+                                {{end}}
                             </div>
                         </div>
                     </div>

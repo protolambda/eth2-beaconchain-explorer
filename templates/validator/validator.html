@@ -39,8 +39,9 @@
 		#slashings-table td:first-child {
 			white-space: break-spaces;
 		}
-		.badge-custom-size {
-      font-size: .82rem;
+		.badge-custom {
+      font-size: 12px;
+      font-weight: 500;
     }
 		.validator-summary-div {
 			border-right-color: rgba(50, 50, 50, 0.5);
@@ -118,14 +119,14 @@
 							{{template "validatorIncomeTable" $}}
 						{{end}}
 					</div>
-				</div>					
+				</div>
 			</div>
 			<div class="row align-items-stretch">
 				<div class="col-lg-8 px-lg-2 my-2">
 					<div class="card h-100 px-0 py-0 card-body">
 						<ul style="margin-top: -1px;margin-left:-1px;" class="nav nav-tabs" id="chartTabs" role="tablist">
 							<li class="nav-item">
-								<a class="nav-link active" id="charts-tab" data-toggle="tab" href="#charts" role="tab" aria-controls="charts-tab-content" aria-selected="false">
+								<a class="nav-link {{if .IncomeHistoryChartData}}active{{else}}disabled{{end}}" id="charts-tab" data-toggle="tab" href="#charts" role="tab" aria-controls="charts-tab-content" aria-selected="false">
 									<i class="tab-icon mr-md-2 fas fa-chart-bar"></i>
 									<span class="tab-text">Charts</span>
 								</a>
@@ -137,6 +138,9 @@
 								<a class="nav-link {{ if eq .AttestationsCount 0 }}disabled{{end}}" id="attestations-tab" data-toggle="tab" href="#attestations" role="tab" aria-controls="attestations" aria-selected="false"><i class="tab-icon mr-md-1 fas fa-file-signature"></i><span class="tab-text">Attestations</span></a>
 							</li>
 							<li class="nav-item">
+								<a class="nav-link {{ if eq .SyncCount 0 }}disabled{{end}}" id="sync-tab" data-toggle="tab" href="#sync" role="tab" aria-controls="sync" aria-selected="false"><i class="tab-icon mr-md-1 fas fa-sync"></i><span class="tab-text">Sync</span></a>
+							</li>
+							<li class="nav-item">
 								<a class="nav-link {{if eq .SlashingsCount 0}}disabled{{end}}" id="slashings-tab" data-toggle="tab" href="#slashings" role="tab" aria-controls="slashings" aria-selected="false"><i class="tab-icon mr-md-1 fas fa-user-slash"></i><span class="tab-text">Slashings</span></a>
 							</li>
 							<li class="nav-item">
@@ -146,21 +150,21 @@
 								<li class="nav-item">
 									<a class="nav-link" id="rocketpool-tab" data-toggle="tab" href="#rocketpool" role="tab" aria-controls="rocketpool" aria-selected="false">
 										<i class="tab-icon mr-md-1 fas fa-rocket"></i>
-										<span class="tab-text">Rocketpool</span>
+										<span class="tab-text">Rocket Pool</span>
 									</a>
 								</li>
 							{{end}}
 						</ul>
 						<div class="tab-content h-100" id="myTabContent">
 							<div id="charts" class="tab-pane fade w-100 h-100 show active" role="tabpanel" aria-labelledby="charts-tab">
-								<div class="btn-group mt-2 ml-2 charts-btn-group" role="group" aria-label="Charts buttons group">
-									<button type="button" class="btn btn-outline-secondary btn-sm income-chart-btn">Income</button>
-									<button type="button" class="btn btn-outline-secondary btn-sm proposed-chart-btn">Proposals</button>
+								<div class="btn-group border rounded mt-2 ml-2 charts-btn-group" role="group" aria-label="Charts buttons group">
+									<button type="button" class="btn btn-link btn-sm border-right income-chart-btn nav-link">Income</button>
+									<button type="button" class="btn btn-link btn-sm proposed-chart-btn nav-link">Proposals</button>
 								</div>
-								<div id="incomeChart" class="w-100 h-100" aria-labelledby="incomeChart-tab">
+								<div id="incomeChart" class="w-100 mb-2" aria-labelledby="incomeChart-tab">
 									{{template "validatorIncomeChart" $}}
 								</div>
-								<div id="proposedChart" class="w-100 h-100 d-none" aria-labelledby="proposedChart-tab">
+								<div id="proposedChart" class="w-100 mb-2 d-none" aria-labelledby="proposedChart-tab">
 									{{template "validatorProposedChart" .}}
 								</div>
 							</div>
@@ -172,6 +176,11 @@
 							{{if gt .AttestationsCount 0}}
 								 <div class="tab-pane fade h-100" id="attestations" role="tabpanel" aria-labelledby="attestations-tab" aria-controls="attestations">
 									{{template "validatorAttestationsTable" .}}
+								</div>
+							{{end}}
+							{{if gt .SyncCount 0}}
+								 <div class="tab-pane fade h-100" id="sync" role="tabpanel" aria-labelledby="sync-tab" aria-controls="sync">
+									{{template "validatorSyncTable" .}}
 								</div>
 							{{end}}
 							{{if gt .SlashingsCount 0}}
@@ -186,7 +195,7 @@
 								<div class="tab-pane fade w-100" id="rocketpool" role="tabpanel" aria-labelledby="rocketpool-tab" aria-controls="rocketpool">
 									<div class="w-75 border-bottom d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-sm-between ml-4 mx-lg-auto mt-5 mb-4">
 										<div class="text-nowrap font-weight-bold" style="font-size: .9rem;"><i class="fas fa-male mr-3 text-muted"></i>Minipool Address</div>
-										<div>{{formatEth1Address .Rocketpool.MinipoolAddress}}</div>
+										<div>{{formatEth1Address .Rocketpool.MinipoolAddress}} <a class="no-highlight" href="https://rocketscan.dev/minipool/{{formatEth1AddressStringLowerCase .Rocketpool.MinipoolAddress}}" target="_blank"><i class="fas fa-rocket" role="button" data-toggle="tooltip" title="" data-original-title="More infos on Rocketscan"></i></a></div>
 									</div>
 									<div class="w-75 border-bottom d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-sm-between ml-4 mx-lg-auto mb-4">
 										<div class="text-nowrap font-weight-bold" style="font-size: .9rem;"><i class="fas fa-money-bill-wave mr-1 text-muted"></i>Minipool Commission</div>
@@ -195,28 +204,28 @@
 									<div class="w-75 border-bottom d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-sm-between ml-4 mx-lg-auto mb-4">
 										<div class="text-nowrap font-weight-bold" style="font-size: .9rem;"><i class="fas fa-wallet mr-2 text-muted"></i>Minipool Deposit Type</div>
 										{{if eq (derefString .Rocketpool.MinipoolDepositType) "Empty"}}
-											<span class="badge badge-pill badge-light badge-custom-size font-weight-normal mb-1">{{.Rocketpool.MinipoolDepositType}}</span>
+											<span class="badge badge-pill badge-light badge-custom mb-1">{{.Rocketpool.MinipoolDepositType}}</span>
 										{{else if eq (derefString .Rocketpool.MinipoolDepositType) "Half"}}
-											<span class="badge badge-pill badge-warning badge-custom-size font-weight-normal text-white mb-1">{{.Rocketpool.MinipoolDepositType}}</span>
+											<span class="badge badge-pill badge-warning badge-custom text-white mb-1">{{.Rocketpool.MinipoolDepositType}}</span>
 										{{else}}
-											<span class="badge badge-pill badge-success badge-custom-size font-weight-normal text-white mb-1">{{.Rocketpool.MinipoolDepositType}}</span>
+											<span class="badge badge-pill badge-success badge-custom text-white mb-1">{{.Rocketpool.MinipoolDepositType}}</span>
 										{{end}}
 									</div>
 									<div class="w-75 border-bottom d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-sm-between ml-4 mx-lg-auto mb-4">
 										<div class="text-nowrap font-weight-bold" style="font-size: .9rem;"><i class="fas fa-check mr-2 text-muted"></i>Minipool Status</div>
 										{{if eq (derefString .Rocketpool.MinipoolStatus) "Initialized"}}
-											<span class="badge badge-pill badge-success badge-custom-size font-weight-normal text-white mb-1">{{.Rocketpool.MinipoolStatus}}</span>
+											<span class="badge badge-pill badge-success badge-custom text-white mb-1">{{.Rocketpool.MinipoolStatus}}</span>
 										{{else if eq (derefString .Rocketpool.MinipoolStatus) "Dissolved"}}
-											<span class="badge badge-pill badge-new-red badge-custom-size font-weight-normal text-white mb-1">{{.Rocketpool.MinipoolStatus}}</span>
+											<span class="badge badge-pill badge-danger badge-custom text-white mb-1">{{.Rocketpool.MinipoolStatus}}</span>
 										{{else if eq (derefString .Rocketpool.MinipoolStatus) "Withdrawable"}}
-											<span class="badge badge-pill badge-warning badge-custom-size font-weight-normal text-white mb-1">{{.Rocketpool.MinipoolStatus}}</span>
+											<span class="badge badge-pill badge-warning badge-custom text-white mb-1">{{.Rocketpool.MinipoolStatus}}</span>
 										{{else}}
-											<span class="badge badge-pill badge-info badge-custom-size font-weight-normal text-white mb-1">{{.Rocketpool.MinipoolStatus}}</span>
+											<span class="badge badge-pill badge-info badge-custom text-white mb-1">{{.Rocketpool.MinipoolStatus}}</span>
 										{{end}}
 									</div>
 									<div class="w-75 border-bottom d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-sm-between ml-4 mx-lg-auto mb-4">
 										<div class="text-nowrap font-weight-bold" style="font-size: .9rem;"><i class="fas fa-male mr-2 text-muted"></i> Node Address</div>
-										<div>{{formatEth1Address .Rocketpool.NodeAddress}}</div>
+										<div>{{formatEth1Address .Rocketpool.NodeAddress}} <a class="no-highlight" href="https://rocketscan.dev/node/{{formatEth1AddressStringLowerCase .Rocketpool.NodeAddress}}" target="_blank"><i class="fas fa-rocket" role="button" data-toggle="tooltip" title="" data-original-title="More infos on Rocketscan"></i></a></div>
 									</div>
 									<div class="w-75 border-bottom d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-sm-between ml-4 mx-lg-auto mb-4">
 										<div class="text-nowrap font-weight-bold" style="font-size: .9rem;"><i class="fas fa-globe mr-2 text-muted"></i>Node Timezone</div>

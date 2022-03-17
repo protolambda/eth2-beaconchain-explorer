@@ -12,15 +12,14 @@ import (
 	"eth2-exporter/services"
 	"eth2-exporter/types"
 	"eth2-exporter/utils"
+	"eth2-exporter/version"
 	"flag"
 	"fmt"
 	"math/big"
 	"net/http"
-	"os"
 	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"
-	"gopkg.in/yaml.v2"
 
 	"github.com/sirupsen/logrus"
 
@@ -46,33 +45,16 @@ func initStripe(http *mux.Router) error {
 }
 
 func main() {
-
-	configPath := flag.String("config", "config.yml", "Path to the config file")
+	configPath := flag.String("config", "config/default.config.yml", "Path to the config file")
 	flag.Parse()
 
-	logrus.Printf("config file path: %v", *configPath)
+	logrus.WithField("config", *configPath).WithField("version", version.Version).Printf("starting")
 	cfg := &types.Config{}
 	err := utils.ReadConfig(cfg, *configPath)
 	if err != nil {
 		logrus.Fatalf("error reading config file: %v", err)
 	}
 	utils.Config = cfg
-	// decode phase0 config
-	if len(utils.Config.Chain.Phase0Path) > 0 {
-		phase0 := &types.Phase0{}
-		f, err := os.Open(utils.Config.Chain.Phase0Path)
-		if err != nil {
-			logrus.Errorf("error opening Phase0 Config file %v: %v", utils.Config.Chain.Phase0Path, err)
-		} else {
-			decoder := yaml.NewDecoder(f)
-			err = decoder.Decode(phase0)
-			if err != nil {
-				logrus.Errorf("error decoding Phase0 Config file %v: %v", utils.Config.Chain.Phase0Path, err)
-			} else {
-				utils.Config.Chain.Phase0 = *phase0
-			}
-		}
-	}
 
 	db.MustInitDB(cfg.Database.Username, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
 	defer db.DB.Close()
@@ -155,6 +137,7 @@ func main() {
 		apiV1Router.HandleFunc("/block/{slot}/attesterslashings", handlers.ApiBlockAttesterSlashings).Methods("GET", "OPTIONS")
 		apiV1Router.HandleFunc("/block/{slot}/proposerslashings", handlers.ApiBlockProposerSlashings).Methods("GET", "OPTIONS")
 		apiV1Router.HandleFunc("/block/{slot}/voluntaryexits", handlers.ApiBlockVoluntaryExits).Methods("GET", "OPTIONS")
+		apiV1Router.HandleFunc("/sync_committee/{period}", handlers.ApiSyncCommittee).Methods("GET", "OPTIONS")
 		apiV1Router.HandleFunc("/eth1deposit/{txhash}", handlers.ApiEth1Deposit).Methods("GET", "OPTIONS")
 		apiV1Router.HandleFunc("/validator/leaderboard", handlers.ApiValidatorLeaderboard).Methods("GET", "OPTIONS")
 		apiV1Router.HandleFunc("/validator/{indexOrPubkey}", handlers.ApiValidator).Methods("GET", "OPTIONS")
@@ -178,6 +161,9 @@ func main() {
 		apiV1Router.HandleFunc("/stats/{apiKey}/{machine}", handlers.ClientStatsPostOld).Methods("POST", "OPTIONS")
 		apiV1Router.HandleFunc("/stats/{apiKey}", handlers.ClientStatsPostOld).Methods("POST", "OPTIONS")
 		apiV1Router.HandleFunc("/client/metrics", handlers.ClientStatsPostNew).Methods("POST", "OPTIONS")
+		apiV1Router.HandleFunc("/app/dashboard", handlers.ApiDashboard).Methods("POST", "OPTIONS")
+		apiV1Router.HandleFunc("/rocketpool/stats", handlers.ApiRocketpoolStats).Methods("GET", "OPTIONS")
+		apiV1Router.HandleFunc("/rocketpool/validator/{indexOrPubkey}", handlers.ApiRocketpoolValidators).Methods("GET", "OPTIONS")
 
 		apiV1Router.HandleFunc("/validator/{indexOrPubkey}/widget", handlers.GetMobileWidgetStats).Methods("GET")
 		apiV1Router.Use(utils.CORSMiddleware)
@@ -196,8 +182,10 @@ func main() {
 		apiV1AuthRouter.HandleFunc("/notifications/bundled/unsubscribe", handlers.MultipleUsersNotificationsUnsubscribe).Methods("POST", "OPTIONS")
 		apiV1AuthRouter.HandleFunc("/notifications/subscribe", handlers.UserNotificationsSubscribe).Methods("POST", "OPTIONS")
 		apiV1AuthRouter.HandleFunc("/notifications/unsubscribe", handlers.UserNotificationsUnsubscribe).Methods("POST", "OPTIONS")
+		apiV1AuthRouter.HandleFunc("/notifications", handlers.UserNotificationsSubscribed).Methods("POST", "GET", "OPTIONS")
 		apiV1AuthRouter.HandleFunc("/stats", handlers.ClientStats).Methods("GET", "OPTIONS")
 		apiV1AuthRouter.HandleFunc("/stats/{offset}/{limit}", handlers.ClientStats).Methods("GET", "OPTIONS")
+		apiV1AuthRouter.HandleFunc("/ethpool", handlers.RegisterEthpoolSubscription).Methods("POST", "OPTIONS")
 		apiV1AuthRouter.Use(utils.CORSMiddleware)
 		apiV1AuthRouter.Use(utils.AuthorizedAPIMiddleware)
 
@@ -237,6 +225,7 @@ func main() {
 			router.HandleFunc("/index/data", handlers.IndexPageData).Methods("GET")
 			router.HandleFunc("/block/{slotOrHash}", handlers.Block).Methods("GET")
 			router.HandleFunc("/block/{slotOrHash}/deposits", handlers.BlockDepositData).Methods("GET")
+			router.HandleFunc("/block/{slotOrHash}/votes", handlers.BlockVoteData).Methods("GET")
 			router.HandleFunc("/blocks", handlers.Blocks).Methods("GET")
 			router.HandleFunc("/blocks/data", handlers.BlocksData).Methods("GET")
 			router.HandleFunc("/vis", handlers.Vis).Methods("GET")
@@ -251,6 +240,7 @@ func main() {
 			router.HandleFunc("/validator/{index}", handlers.Validator).Methods("GET")
 			router.HandleFunc("/validator/{index}/proposedblocks", handlers.ValidatorProposedBlocks).Methods("GET")
 			router.HandleFunc("/validator/{index}/attestations", handlers.ValidatorAttestations).Methods("GET")
+			router.HandleFunc("/validator/{index}/sync", handlers.ValidatorSync).Methods("GET")
 			router.HandleFunc("/validator/{index}/history", handlers.ValidatorHistory).Methods("GET")
 			router.HandleFunc("/validator/{pubkey}/deposits", handlers.ValidatorDeposits).Methods("GET")
 			router.HandleFunc("/validator/{index}/slashings", handlers.ValidatorSlashings).Methods("GET")
@@ -353,10 +343,16 @@ func main() {
 			authRouter.HandleFunc("/settings/flags", handlers.UserUpdateFlagsPost).Methods("POST")
 			authRouter.HandleFunc("/settings/delete", handlers.UserDeletePost).Methods("POST")
 			authRouter.HandleFunc("/settings/email", handlers.UserUpdateEmailPost).Methods("POST")
-			authRouter.HandleFunc("/notifications", handlers.UserNotifications).Methods("GET")
+			authRouter.HandleFunc("/notifications", handlers.UserNotificationsCenter).Methods("GET")
 			authRouter.HandleFunc("/notifications/data", handlers.UserNotificationsData).Methods("GET")
 			authRouter.HandleFunc("/notifications/subscribe", handlers.UserNotificationsSubscribe).Methods("POST")
 			authRouter.HandleFunc("/notifications/unsubscribe", handlers.UserNotificationsUnsubscribe).Methods("POST")
+			authRouter.HandleFunc("/notifications/bundled/subscribe", handlers.MultipleUsersNotificationsSubscribeWeb).Methods("POST", "OPTIONS")
+			authRouter.HandleFunc("/notifications-center", handlers.UserNotificationsCenter).Methods("GET")
+			authRouter.HandleFunc("/notifications-center/removeall", handlers.RemoveAllValidatorsAndUnsubscribe).Methods("POST")
+			authRouter.HandleFunc("/notifications-center/validatorsub", handlers.AddValidatorsAndSubscribe).Methods("POST")
+			authRouter.HandleFunc("/notifications-center/updatesubs", handlers.UserUpdateSubscriptions).Methods("POST")
+			// authRouter.HandleFunc("/notifications-center/monitoring/updatesubs", handlers.UserUpdateMonitoringSubscriptions).Methods("POST")
 			authRouter.HandleFunc("/subscriptions/data", handlers.UserSubscriptionsData).Methods("GET")
 			authRouter.HandleFunc("/generateKey", handlers.GenerateAPIKey).Methods("POST")
 			authRouter.HandleFunc("/ethClients", handlers.EthClientsServices).Methods("GET")
@@ -420,7 +416,6 @@ func main() {
 			}
 		}()
 	}
-
 	if utils.Config.Notifications.Enabled {
 		services.InitNotifications()
 	}

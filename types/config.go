@@ -1,5 +1,9 @@
 package types
 
+import (
+	"html/template"
+)
+
 // Config is a struct to hold the configuration data
 type Config struct {
 	Database struct {
@@ -23,9 +27,12 @@ type Config struct {
 		// Deprecated Use Phase0 config GENESIS_DELAY
 		GenesisDelay uint64 `yaml:"genesisDelay" envconfig:"CHAIN_GENESIS_DELAY"`
 		// Deprecated Use Phase0 config CONFIG_NAME == "mainnet"
-		Mainnet    bool   `yaml:"mainnet" envconfig:"CHAIN_MAINNET"`
-		Phase0Path string `yaml:"phase0path" envconfig:"CHAIN_PHASE0_PATH"`
+		Mainnet         bool   `yaml:"mainnet" envconfig:"CHAIN_MAINNET"`
+		Phase0Path      string `yaml:"phase0path" envconfig:"CHAIN_PHASE0_PATH"`
+		AltairPath      string `yaml:"altairPath" envconfig:"CHAIN_ALTAIR_PATH"`
+		AltairForkEpoch uint64 `yaml:"altairForkEpoch" envconfig:"CHAIN_ALTAIR_FORK_EPOCH"`
 		Phase0
+		Altair
 	} `yaml:"chain"`
 	Indexer struct {
 		Enabled                     bool `yaml:"enabled" envconfig:"INDEXER_ENABLED"`
@@ -55,14 +62,15 @@ type Config struct {
 		} `yaml:"pubkeyTagsExporter"`
 	} `yaml:"indexer"`
 	Frontend struct {
-		Kong               string `yaml:"kong" envconfig:"FRONTEND_KONG"`
-		OnlyAPI            bool   `yaml:"onlyAPI" envconfig:"FRONTEND_ONLY_API"`
-		CsrfAuthKey        string `yaml:"csrfAuthKey" envconfig:"FRONTEND_CSRF_AUTHKEY`
-		CsrfInsecure       bool   `yaml:"csrfInsecure" envconfig:"FRONTEND_CSRF_INSECURE"`
-		DisableCharts      bool   `yaml:"disableCharts" envconfig:"disableCharts"`
-		RecaptchaSiteKey   string `yaml:"recaptchaSiteKey" envconfig:"FRONTEND_RECAPTCHA_SITEKEY"`
-		RecaptchaSecretKey string `yaml:"recaptchaSecretKey" envconfig:"FRONTEND_RECAPTCHA_SECRETKEY"`
-		Enabled            bool   `yaml:"enabled" envconfig:"FRONTEND_ENABLED"`
+		BeaconchainETHPoolBridgeSecret string `yaml:"beaconchainETHPoolBridgeSecret" envconfig:"FRONTEND_BEACONCHAIN_ETHPOOL_BRIDGE_SECRET"`
+		Kong                           string `yaml:"kong" envconfig:"FRONTEND_KONG"`
+		OnlyAPI                        bool   `yaml:"onlyAPI" envconfig:"FRONTEND_ONLY_API"`
+		CsrfAuthKey                    string `yaml:"csrfAuthKey" envconfig:"FRONTEND_CSRF_AUTHKEY`
+		CsrfInsecure                   bool   `yaml:"csrfInsecure" envconfig:"FRONTEND_CSRF_INSECURE"`
+		DisableCharts                  bool   `yaml:"disableCharts" envconfig:"disableCharts"`
+		RecaptchaSiteKey               string `yaml:"recaptchaSiteKey" envconfig:"FRONTEND_RECAPTCHA_SITEKEY"`
+		RecaptchaSecretKey             string `yaml:"recaptchaSecretKey" envconfig:"FRONTEND_RECAPTCHA_SECRETKEY"`
+		Enabled                        bool   `yaml:"enabled" envconfig:"FRONTEND_ENABLED"`
 		// Imprint is deprecated place imprint file into the legal directory
 		Imprint      string `yaml:"imprint" envconfig:"FRONTEND_IMPRINT"`
 		LegalDir     string `yaml:"legalDir" envconfig:"FRONTEND_LEGAL"`
@@ -120,10 +128,10 @@ type Config struct {
 			URL     string `yaml:"gitcoinURL" envconfig:"FRONTEND_GITCOIN_URL"`
 		} `yaml:"showDonors"`
 		Countdown struct {
-			Enabled   bool   `yaml:"enabled" envconfig:"FRONTEND_COUNTDOWN_ENABLED"`
-			Title     string `yaml:"title" envconfig:"FRONTEND_COUNTDOWN_TITLE"`
-			Timestamp uint64 `yaml:"timestamp" envconfig:"FRONTEND_COUNTDOWN_TIMESTAMP"`
-			Info      string `yaml:"info" envconfig:"FRONTEND_COUNTDOWN_INFO"`
+			Enabled   bool          `yaml:"enabled" envconfig:"FRONTEND_COUNTDOWN_ENABLED"`
+			Title     template.HTML `yaml:"title" envconfig:"FRONTEND_COUNTDOWN_TITLE"`
+			Timestamp uint64        `yaml:"timestamp" envconfig:"FRONTEND_COUNTDOWN_TIMESTAMP"`
+			Info      string        `yaml:"info" envconfig:"FRONTEND_COUNTDOWN_INFO"`
 		} `yaml:"countdown"`
 	} `yaml:"frontend"`
 	Metrics struct {
@@ -233,4 +241,14 @@ type Phase0 struct {
 	// DomainVoluntaryExit
 	// DomainSelectionProof
 	// DomainAggregateAndProof
+}
+
+// https://github.com/ethereum/consensus-specs/blob/dev/presets/mainnet/altair.yaml
+type Altair struct {
+	InvactivityPenaltyQuotientAltair     uint64 `yaml:"INACTIVITY_PENALTY_QUOTIENT_ALTAIR"`
+	MinSlashingPenaltyQuotientAltair     uint64 `yaml:"MIN_SLASHING_PENALTY_QUOTIENT_ALTAIR"`
+	ProportionalSlashingMultiplierAltair uint64 `yaml:"PROPORTIONAL_SLASHING_MULTIPLIER_ALTAIR"`
+	SyncCommitteeSize                    uint64 `yaml:"SYNC_COMMITTEE_SIZE"`
+	EpochsPerSyncCommitteePeriod         uint64 `yaml:"EPOCHS_PER_SYNC_COMMITTEE_PERIOD"`
+	MinSyncCommitteeParticipants         uint64 `yaml:"MIN_SYNC_COMMITTEE_PARTICIPANTS"`
 }

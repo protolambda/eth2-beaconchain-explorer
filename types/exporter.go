@@ -76,6 +76,9 @@ type Validator struct {
 	Balance7d         uint64 `db:"balance7d"`
 	Balance31d        uint64 `db:"balance31d"`
 	Status            string `db:"status"`
+
+	LastAttestationSlot uint64 `db:"lastattestationslot"`
+	LastProposalSlot    uint64 `db:"lastproposalslot"`
 }
 
 // ValidatorQueue is a struct to hold validator queue data
@@ -85,6 +88,7 @@ type ValidatorQueue struct {
 }
 
 type SyncAggregate struct {
+	SyncCommitteeValidators    []uint64
 	SyncCommitteeBits          []byte
 	SyncCommitteeSignature     []byte
 	SyncAggregateParticipation float64
@@ -249,6 +253,7 @@ type BlockComparisonContainer struct {
 type EpochAssignments struct {
 	ProposerAssignments map[uint64]uint64
 	AttestorAssignments map[string]uint64
+	SyncAssignments     []uint64
 }
 
 // Eth1Deposit is a struct to hold eth1-deposit data

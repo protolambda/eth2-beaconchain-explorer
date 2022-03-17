@@ -30,6 +30,7 @@ func Start(client rpc.Client) error {
 	go genesisDepositsExporter()
 	go checkSubscriptions()
 	go cleanupOldMachineStats()
+	go syncCommitteesExporter(client)
 	if utils.Config.SSVExporter.Enabled {
 		go ssvExporter()
 	}
@@ -449,7 +450,7 @@ func ExportEpoch(epoch uint64, client rpc.Client) error {
 		logger.WithFields(logrus.Fields{"duration": time.Since(start), "epoch": epoch}).Info("completed exporting epoch")
 	}()
 
-	// Check if the partition for the validator_balances and attestation_assignments table for this epoch exists
+	// Check if the partition for the validator_balances and attestation_assignments and sync_assignments table for this epoch exists
 	var one int
 	logger.Printf("checking partition status for epoch %v", epoch)
 	week := epoch / 1575
@@ -467,6 +468,14 @@ func ExportEpoch(epoch uint64, client rpc.Client) error {
 		_, err := db.DB.Exec(fmt.Sprintf("CREATE TABLE validator_balances_%v PARTITION OF validator_balances_p FOR VALUES IN (%v);", week, week))
 		if err != nil {
 			logger.Fatalf("unable to create partition validator_balances_%v: %v", week, err)
+		}
+	}
+	err = db.DB.Get(&one, fmt.Sprintf("SELECT 1 FROM information_schema.tables WHERE table_name = 'sync_assignments_%v'", week))
+	if err != nil {
+		logger.Infof("creating partition sync_assignments_%v", week)
+		_, err := db.DB.Exec(fmt.Sprintf("CREATE TABLE sync_assignments_%v PARTITION OF sync_assignments_p FOR VALUES IN (%v);", week, week))
+		if err != nil {
+			logger.Fatalf("unable to create partition sync_assignments_%v: %v", week, err)
 		}
 	}
 
@@ -586,7 +595,7 @@ func updateValidatorPerformance() error {
 		Amount    int64
 	}{}
 
-	err = tx.Select(&deposits, `SELECT block_slot / 32 AS epoch, amount, publickey FROM blocks_deposits`)
+	err = tx.Select(&deposits, `SELECT block_slot / 32 AS epoch, amount, publickey FROM blocks_deposits INNER JOIN blocks ON blocks_deposits.block_root = blocks.blockroot AND blocks.status = '1'`)
 	if err != nil {
 		return fmt.Errorf("error retrieving validator deposits data: %w", err)
 	}
@@ -797,7 +806,7 @@ func genesisDepositsExporter() {
 
 		// check if genesis-deposits have already been exported
 		var genesisDepositsCount uint64
-		err = db.DB.Get(&genesisDepositsCount, "SELECT COUNT(*) FROM blocks_deposits WHERE block_slot=0")
+		err = db.DB.Get(&genesisDepositsCount, "SELECT COUNT(*) FROM blocks_deposits INNER JOIN blocks ON blocks_deposits.block_root = blocks.blockroot AND blocks.status = '1' WHERE block_slot=0")
 		if err != nil {
 			logger.Errorf("error retrieving genesis-deposits-count when exporting genesis-deposits: %v", err)
 			time.Sleep(time.Second * 60)

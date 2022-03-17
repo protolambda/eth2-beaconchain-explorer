@@ -8,12 +8,13 @@ require (
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/Gurpartap/storekit-go v0.0.0-20201205024111-36b6cd5c6a21
 	github.com/awa/go-iap v1.3.7
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/chromedp/cdproto v0.0.0-20200709115526-d1f6fc58448b
 	github.com/chromedp/chromedp v0.5.3
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/ethereum/go-ethereum v1.10.8
 	github.com/evanw/esbuild v0.8.23
+	github.com/go-chi/chi v4.0.2+incompatible // indirect
+	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2
@@ -25,21 +26,20 @@ require (
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/juliangruber/go-intersect v1.0.1-0.20200323101606-4bd944a17692
+	github.com/juliangruber/go-intersect v1.1.0
 	github.com/jung-kurt/gofpdf v1.0.3-0.20190309125859-24315acbbda5
 	github.com/kataras/i18n v0.0.5
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/lib/pq v1.2.0
 	github.com/mailgun/mailgun-go/v4 v4.1.3
-	github.com/mailru/easyjson v0.7.6 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mssola/user_agent v0.5.2
 	github.com/phyber/negroni-gzip v0.0.0-20180113114010-ef6356a5d029
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/protolambda/zrnt v0.12.4
-	github.com/protolambda/zssz v0.1.5
 	github.com/protolambda/ztyp v0.1.0
 	github.com/prysmaticlabs/eth2-types v0.0.0-20210303084904-c9735a06829d
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210809151128-385d8c5e3fb7
@@ -48,14 +48,17 @@ require (
 	github.com/rocket-pool/rocketpool-go v1.0.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stripe/stripe-go/v72 v72.50.0
-	github.com/swaggo/http-swagger v0.0.0-20200308142732-58ac5e232fba
-	github.com/swaggo/swag v1.7.0 // indirect
+	github.com/swaggo/files v0.0.0-20210815190702-a29dd2bc99b2 // indirect
+	github.com/swaggo/http-swagger v1.1.2
+	github.com/swaggo/swag v1.7.4
 	github.com/urfave/negroni v1.0.0
 	github.com/zesik/proxyaddr v0.0.0-20161218060608-ec32c535184d
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
-	golang.org/x/text v0.3.6
+	golang.org/x/sys v0.0.0-20211113001501-0c823b97ae02 // indirect
+	golang.org/x/text v0.3.7
+	golang.org/x/tools v0.1.7 // indirect
 	google.golang.org/api v0.44.0
 	google.golang.org/genproto v0.0.0-20210426193834-eac7f76ac494
 	google.golang.org/grpc v1.37.0

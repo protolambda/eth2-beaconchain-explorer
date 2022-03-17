@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -41,6 +42,7 @@ type CustomClaims struct {
 	AppID    uint64 `json:"appID"`
 	DeviceID uint64 `json:"deviceID"`
 	Package  string `json:"package"`
+	Theme    string `json:"theme"`
 	jwt.StandardClaims
 }
 
@@ -59,7 +61,7 @@ type OAuthErrorResponse struct {
 }
 
 // CreateAccessToken Creates a new access token for a given user
-func CreateAccessToken(userID, appID, deviceID uint64, pkg string) (string, int, error) {
+func CreateAccessToken(userID, appID, deviceID uint64, pkg, theme string) (string, int, error) {
 	expiresIn := Config.Frontend.JwtValidityInMinutes * 60
 
 	standardlaims := jwt.StandardClaims{
@@ -72,6 +74,7 @@ func CreateAccessToken(userID, appID, deviceID uint64, pkg string) (string, int,
 		appID,
 		deviceID,
 		pkg,
+		theme,
 		standardlaims,
 	})
 
@@ -121,6 +124,10 @@ func accessTokenGetClaims(tokenStringFull string, validate bool) (*CustomClaims,
 	if err != nil && validate {
 		logger.Errorf("Error parsing jwt token: %v %v", err, token)
 		return nil, err
+	}
+
+	if token == nil {
+		return nil, fmt.Errorf("error token is not defined %v", tokenStringFull)
 	}
 
 	// Make sure header hasnt been tampered with

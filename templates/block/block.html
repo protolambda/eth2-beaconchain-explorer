@@ -5,7 +5,7 @@
 
     <script>
         $(document).ready(function() {
-            var tblOpts = {
+            var depositsTblOpts = {
                 processing: true,
                 serverSide: true,
                 ordering: false,
@@ -17,16 +17,21 @@
                     searchPlaceholder: 'Deposit Number / Public Key / Credentials',
                     search: '',
                     paginate: {
-                        previous: "<",
-                        next: ">",
+                        previous: '<i class="fas fa-chevron-left"></i>',
+                        next: '<i class="fas fa-chevron-right"></i>'
                     }
                 },
                 columnDefs: [
                     {
-                        targets: 4,
-                        data: '4',
+                        targets: 3,
                         render: function(data, type, row) {
-                            return `<div data-toggle="tooltip" title="${data}" style="max-width: 130px;" class="text-truncate">${data}</div>`
+                            return `<div class="d-flex justify-content-between">${data}<i class="fa fa-copy text-muted p-1" role="button" data-toggle="tooltip" title="Copy to clipboard" data-clipboard-text="${data}"></i></div>`
+                        }
+                    },
+                    {
+                        targets: 4,
+                        render: function(data, type, row) {
+                            return `<div class="d-flex"><div data-toggle="tooltip" title="${data}" style="max-width: 130px;" class="text-truncate">${data}</div><i class="fa fa-copy text-muted p-1" role="button" data-toggle="tooltip" title="Copy to clipboard" data-clipboard-text="${data}"></i></div>`
                         }
                     }
                 ],
@@ -45,9 +50,47 @@
             var usp = new URLSearchParams(window.location.search)
             var q = usp.get('q')
             if (q) {
-                tblOpts.search = {"search": q}
+                depositsTblOpts.search = {"search": q}
             }
-            var tbl = $('#block_deposits').DataTable(tblOpts)
+            var depositsTbl = $('#block_deposits').DataTable(depositsTblOpts)
+
+            var votesTblOpts = {
+                processing: true,
+                serverSide: true,
+                ordering: false,
+                searching: true,
+                ajax: window.location.pathname + '/votes',
+                pageLength: 10,
+                pagingType: 'input',
+                language: {
+                    searchPlaceholder: 'Validator',
+                    search: '',
+                    paginate: {
+                        previous: '<i class="fas fa-chevron-left"></i>',
+                        next: '<i class="fas fa-chevron-right"></i>'
+                    }
+                },
+                columnDefs: [
+                    { targets: [2], className: 'white-space-normal'},
+                ],
+                preDrawCallback: function() {
+                    // this does not always work.. not sure how to solve the staying tooltip
+                    try {
+                        $('#block_votes').find('[data-toggle="tooltip"]').tooltip('dispose')
+                    } catch (e) {
+                    }
+                },
+                drawCallback: function(settings) {
+                    formatTimestamps()
+                    $('#block_votes').find('[data-toggle="tooltip"]').tooltip()
+                },
+            }
+            var usp = new URLSearchParams(window.location.search)
+            var q = usp.get('q')
+            if (q) {
+                votesTblOpts.search = {"search": q}
+            }
+            var votesTbl = $('#block_votes').DataTable(votesTblOpts)
         })
     </script>
 
@@ -164,11 +207,13 @@
                         {{template "block_overview" .}}
                     </div>
                 </div>
-                <div class="tab-pane fade" id="votes" role="tabpanel" aria-labelledby="votes-tab">
-                    <div class="card block-card">
-                        {{template "block_votes" .}}
+                {{if eq .VotesCount 0}}
+                    <div class="tab-pane fade" id="votes" role="tabpanel" aria-labelledby="votes-tab">
+                        <div class="card block-card">
+                            {{template "block_votes" .}}
+                        </div>
                     </div>
-                </div>
+                {{end}}
                 <div class="tab-pane fade" id="attestations" role="tabpanel" aria-labelledby="attestations-tab">
                     <div class="card block-card">
                         <div style="margin-bottom: -.25rem;" class="card-body px-0 py-1">
