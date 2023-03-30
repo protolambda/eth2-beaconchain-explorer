@@ -16,8 +16,8 @@
                     searchPlaceholder: 'Block Number / Graffiti / Proposer Name',
                     search: '',
                     paginate: {
-                        previous: "<",
-                        next: ">",
+                        previous: '<i class="fas fa-chevron-left"></i>',
+                        next: '<i class="fas fa-chevron-right"></i>'
                     }
                 },
                 preDrawCallback: function () {
@@ -84,6 +84,8 @@
                                 </th>
                                 <th>Exits</th>
                                 <th>Votes</th>
+                                <th data-toggle="tooltip" data-placement="top" title="Sync Aggregate participation">Sync Agg %
+                                </th>
                                 <th>Graffiti</th>
                             </tr>
                             </thead>
